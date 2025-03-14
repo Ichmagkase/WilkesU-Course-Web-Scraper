@@ -1,0 +1,44 @@
+
+---------
+Easiest way to set up local mongo image:
+
+Pull docker image from dockerhub:
+docker pull mongodb/mongodb-community-server
+
+(Optionally) Create version environment variable:
+export MONGODB_VERSION=7.0.11-ubuntu2204
+
+Run container:
+docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:$MONGODB_VERSION
+
+This will establish the port on 27017, MongoDB's default port
+
+Alternatively establish a docker network:
+
+Container 1:
+docker run --name mongodb -d --network mongodb mongodb/mongodb-community-server:$MONGODB_VERSION
+
+Container 2:
+docker run --name mongosh --network mongodb mongodb/mongodb-community-server:$MONGODB_VERSION mongosh mongodb://mongodb --eval "show dbs"
+
+Such that the database can exist on Container 1, and the commandline utility can be used on Container 2
+-------------
+Purge all unused or dangling images, containers, volumes, and networks:
+
+docker system prune
+
+Clean up all docker resources:
+
+docker system prune -a
+
+or use cleanup.sh in ./debug
+---------------
+
+Now utlizing docker compose using compose.yml. Pulls the mongodb docker image
+from dockerhub and builds it alongside our Dockerfile which builds our go app
+src directory. The mongodb container and go app conatiners are able to communicate
+via docker network because of docker compose, but didnt look at figuring out how to
+actually access the mongodb apis from our dbinterface.go yet. As a wise man once said,
+
+This sounds like a tomorrow problem
+---------------

@@ -1,0 +1,14 @@
+services:
+  mongodb:
+    image: mongodb/mongodb-community-server:7.0.11-ubuntu2204
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+
+  go-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go-app
+    depends_on:
+      - mongodb
