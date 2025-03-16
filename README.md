@@ -1,4 +1,4 @@
-
+# Wilkes University Course Web Scraper
 
 Starting the application:
 
