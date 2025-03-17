@@ -8,6 +8,49 @@ import (
 	"golang.org/x/net/html"
 )
 
+/* The course struct is what a course is expected to look like.
+
+Any variable that is a pointer to a type is an optional paramteter.
+*/
+type course struct {
+	deliveryMode string // F2F; HYB; null etc.
+	courseCategory string // CS; MTH; ENG etc.
+	courseId int
+	section string // INA; A; B etc.
+	crn int
+	title string // Planet Earth; Composition; Calculus I etc.
+	credits float32 // 3.00; 4.00 etc.
+	day *string // MWF; TR; null etc.
+	startTime *string // 0100; 0800; 0430; null etc.
+	endTime *string // 0100; 0800; 0430; null etc.
+	endTimeAMPM *string // AM; PM; null.
+	location *string // SLC 409; BREIS 018; null etc. 
+	instructor string // Nye B; Simpson H; Kapolka M etc.
+	status string // Open; Nearly; Closed.
+	students int 
+	waiting int
+	info *string // HONORS STUDENTS ONLY; CROSS-LISTED WITH IM 350 A etc.
+	isOnline bool // This is for full online classes (OL) not SOL or HYB
+	child *courseChild
+}
+
+/* courseChild is for more time slots when courses dont always
+meet at the same time. 
+
+For example, CS 125 may meet on MW 0100-0215PM,
+but on F 0900-1050AM. This is probably a lab, but is not listed as a lab,
+thus we add a courseChild
+*/
+type courseChild struct {
+	credits float32
+	day *string
+	startTime *string
+	endTime *string
+	endTimeAMPM *string
+	location *string
+	info *string
+	child *courseChild
+}
 
 func getHTML(link string) string {
 	/* getHTML gets the HTML from a webpage.
@@ -51,7 +94,9 @@ func parseHTML(body string) {
 			return
 		}
 		token := tokenizer.Token()
-		fmt.Println(token.String())
+		if (tokenType == html.StartTagToken) && ("tr" == token.Data) {
+			// WE ARE IN A COURSE!!!	
+		}
 	}
 }
 func scraper() {
