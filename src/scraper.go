@@ -52,7 +52,25 @@ type courseChild struct {
 	child *courseChild
 }
 
-func getHTML(link string) string {
+func getCourseData (token html.Token, tokenizer *html.Tokenizer) course {
+	for {
+		tokenType := tokenizer.Next()
+		if tokenType == html.ErrorToken {
+			// EOF: Done reading
+			return course {}
+		}
+		token := tokenizer.Token()
+		if (tokenType == html.TextToken) {
+			fmt.Printf("%s", token.Data)
+		} else if (tokenType == html.EndTagToken) && (token.Data == "tr") {
+			fmt.Println()
+			return course {}
+		}
+	}
+	return course {}
+}
+
+func getHTML(link string) (string, error) {
 	/* getHTML gets the HTML from a webpage.
 
 	Arguments:
@@ -65,15 +83,15 @@ func getHTML(link string) string {
 	resp, err := http.Get(link)
 	defer resp.Body.Close()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return string(body)
+	return string(body), nil
 }
 
 func parseHTML(body string) {
@@ -95,14 +113,18 @@ func parseHTML(body string) {
 		}
 		token := tokenizer.Token()
 		if (tokenType == html.StartTagToken) && ("tr" == token.Data) {
-			// WE ARE IN A COURSE!!!	
+			getCourseData(token, tokenizer)
 		}
 	}
 }
+
 func scraper() {
 	fmt.Println("Scraper service started")
 
-	body := getHTML("https://rosters.wilkes.edu/scheds/coursesF25.html")
+	body, err := getHTML("https://rosters.wilkes.edu/scheds/coursesF25.html")
+	if err != nil {
+		panic(err)
+	}
 
 	parseHTML(body)
 }
