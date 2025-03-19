@@ -52,22 +52,121 @@ type courseChild struct {
 	child *courseChild
 }
 
-func getCourseData (token html.Token, tokenizer *html.Tokenizer) course {
+func getDeliveryMode(c *course, tokenizer *html.Tokenizer) {
 	for {
 		tokenType := tokenizer.Next()
-		if tokenType == html.ErrorToken {
-			// EOF: Done reading
-			return course {}
+		if (tokenType == html.ErrorToken) {
+			fmt.Println("Error Token, exiting . . .")
+			break
 		}
+
 		token := tokenizer.Token()
+
 		if (tokenType == html.TextToken) {
-			fmt.Printf("%s", token.Data)
-		} else if (tokenType == html.EndTagToken) && (token.Data == "tr") {
-			fmt.Println()
-			return course {}
+			fmt.Printf("DeliveryMode Token found! %s\n", token.Data)
+			c.deliveryMode = token.Data
+			break
 		}
 	}
-	return course {}
+}
+
+func getCourseCategoryAndId(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getSection(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getCRN(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getTitle(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getCredits(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getDay(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getTime(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getLocation(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getInstructor(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getStatus(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getWaiting(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getInfo(c *course, tokenizer *html.Tokenizer) {
+}
+
+func getField(c *course, fieldCount *int, tokenizer *html.Tokenizer) {
+	switch (*fieldCount) {
+		case 0:
+			getDeliveryMode(c, tokenizer)
+			break
+		case 1:
+			getCourseCategoryAndId(c, tokenizer)
+			break
+		case 2:
+			getSection(c, tokenizer)
+			break
+		case 3:
+			getCRN(c, tokenizer)
+			break
+		case 4:
+			getTitle(c, tokenizer)
+			break
+		case 5:
+			getCredits(c, tokenizer)
+			break
+		case 6:
+			getDay(c, tokenizer)
+			break
+		case 7:
+			getTime(c, tokenizer)
+			break
+		case 8:
+			getLocation(c, tokenizer)
+			break
+		case 9:
+			getInstructor(c, tokenizer)
+			break
+		case 10:
+			getStatus(c, tokenizer)
+			break
+		case 11:
+			getWaiting(c, tokenizer)
+			break
+	}
+	(*fieldCount)++
+}
+
+func getCourseData (token html.Token, tokenizer *html.Tokenizer) course {
+	c := course{}
+	fieldCount := 0
+	fmt.Println("Getting Course Data . . .")
+	for {
+		tokenType := tokenizer.Next()
+		if (tokenType == html.ErrorToken) {
+			return c
+		} else if (tokenType == html.EndTagToken) && (token.Data == "tr") {
+			return c
+		}
+
+		token := tokenizer.Token()
+		fmt.Printf("Token: %s ; Type: %s\n", token.Data, tokenType)
+
+		if (tokenType == html.StartTagToken) && (token.Data == "td") {
+			getField(&c, &fieldCount, tokenizer)
+		}
+	}
 }
 
 func getHTML(link string) (string, error) {
@@ -105,6 +204,22 @@ func parseHTML(body string) {
 		Umm . . . Cheddar!
 	*/
 	tokenizer := html.NewTokenizer(strings.NewReader(body))
+
+	// skip to tbody
+	for {
+		tokenType := tokenizer.Next()
+		if tokenType == html.ErrorToken {
+			return
+		}
+		token := tokenizer.Token()
+		fmt.Printf("Token: %s ; Type: %s\n", token.Data, tokenType)
+		if (tokenType == html.EndTagToken) && (token.Data == "thead") {
+			fmt.Println("At <tbody>, exiting . . .")
+			tokenizer.Next() // </thead> -> <tbody>
+			break
+		}
+	}
+
 	for {
 		tokenType := tokenizer.Next()
 		if tokenType == html.ErrorToken {
@@ -112,7 +227,8 @@ func parseHTML(body string) {
 			return
 		}
 		token := tokenizer.Token()
-		if (tokenType == html.StartTagToken) && ("tr" == token.Data) {
+		fmt.Printf("Token: %s ; Type: %s\n", token.Data, tokenType)
+		if (tokenType == html.StartTagToken) && (token.Data == "tr") {
 			getCourseData(token, tokenizer)
 		}
 	}
