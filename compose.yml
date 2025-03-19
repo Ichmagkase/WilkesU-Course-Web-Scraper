@@ -5,10 +5,10 @@ services:
     ports:
       - "27017:27017"
 
-  go-app:
+  scraper:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: go-app
+    container_name: scraper 
     depends_on:
       - mongodb
