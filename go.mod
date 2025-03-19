@@ -1,8 +1,7 @@
 module wilkesu-scrapy/src
 
-go 1.23.0
+go 1.23
 
-toolchain go1.23.7
 
 require go.mongodb.org/mongo-driver v1.17.3
 

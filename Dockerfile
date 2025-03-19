@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY ./src/ /build/
 
-RUN go build -o main .
+RUN go build -o main
 
 CMD ["./main"]
 
