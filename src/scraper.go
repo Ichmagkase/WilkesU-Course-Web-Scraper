@@ -100,7 +100,7 @@ func getCourseCategoryAndId(c *course, tokenizer *html.Tokenizer) error {
 	Returns:
 		error: Error during parsing or nil 
 	*/
-		for {
+	for {
 		tokenType := tokenizer.Next()
 		if (tokenType == html.ErrorToken) {
 			fmt.Println("Error Token, exiting . . .")
@@ -160,15 +160,106 @@ func getSection(c *course, tokenizer *html.Tokenizer) error {
 }
 
 func getCRN(c *course, tokenizer *html.Tokenizer) error {
+	/* getCRN gets the CRN from the course.
+
+	CRN is the course registration number (31233,23213, 0 etc.)
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	for {
+		tokenType := tokenizer.Next()
+		if (tokenType == html.ErrorToken) {
+			fmt.Println("Error Token, exiting . . .")
+			break
+		}
+
+		token := tokenizer.Token()
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("CRN Token found: %s\n", token.Data)
+			parsedCRN, err := strconv.Atoi(token.Data)
+			if err != nil {
+				return err
+			}
+			c.crn = parsedCRN
+			break
+		}
+	}
 	return nil
+
 }
 
 func getTitle(c *course, tokenizer *html.Tokenizer) error {
+	/* getTitle gets the name from the course.
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	for {
+		tokenType := tokenizer.Next()
+		if (tokenType == html.ErrorToken) {
+			fmt.Println("Error Token, exiting . . .")
+			break
+		}
+
+		token := tokenizer.Token()
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Title Token found: %s\n", token.Data)
+			c.title = token.Data
+			break
+		}
+	}
 	return nil
+
 }
 
 func getCredits(c *course, tokenizer *html.Tokenizer) error {
+	/* getCredits gets the credits from the course.
+
+	Credits are floats (3.00, 4.00, 1.00, etc.)
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	for {
+		tokenType := tokenizer.Next()
+		if (tokenType == html.ErrorToken) {
+			fmt.Println("Error Token, exiting . . .")
+			break
+		}
+
+		token := tokenizer.Token()
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Credits Token found: %s\n", token.Data)
+			parsedCredits, err := strconv.ParseFloat(token.Data, 32)
+			if err != nil {
+				return err
+			}
+			c.credits = float32(parsedCredits)
+			break
+		}
+	}
 	return nil
+
+
 }
 
 func getDay(c *course, tokenizer *html.Tokenizer) error {
