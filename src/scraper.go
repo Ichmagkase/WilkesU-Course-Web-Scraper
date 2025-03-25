@@ -5,7 +5,10 @@ import (
 	"net/http"
 	"io/ioutil"
 	"strings"
+	"strconv"
 	"golang.org/x/net/html"
+	"errors"
+	"os"
 )
 
 /* The course struct is what a course is expected to look like.
@@ -52,7 +55,19 @@ type courseChild struct {
 	child *courseChild
 }
 
-func getDeliveryMode(c *course, tokenizer *html.Tokenizer) {
+func getDeliveryMode(c *course, tokenizer *html.Tokenizer) error {
+	/* getDeliveryMode gets the delivery mode from the course.
+
+	Delivery modes is how the course is offered (F2F, HYB, OL etc.)
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
 	for {
 		tokenType := tokenizer.Next()
 		if (tokenType == html.ErrorToken) {
@@ -63,108 +78,192 @@ func getDeliveryMode(c *course, tokenizer *html.Tokenizer) {
 		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
-			fmt.Printf("DeliveryMode Token found! %s\n", token.Data)
+			fmt.Printf("Delivery Mode Token found: %s\n", token.Data)
 			c.deliveryMode = token.Data
 			break
 		}
 	}
+	return nil
 }
 
-func getCourseCategoryAndId(c *course, tokenizer *html.Tokenizer) {
-}
+func getCourseCategoryAndId(c *course, tokenizer *html.Tokenizer) error {
+	/* getCourseCategoryAndId gets the course category 
+	and id of the course.
 
-func getSection(c *course, tokenizer *html.Tokenizer) {
-}
+	Course category is where the course belongs to (CS, MTH, ENG etc.)
+	Course id is the number of that course. 
 
-func getCRN(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getTitle(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getCredits(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getDay(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getTime(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getLocation(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getInstructor(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getStatus(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getWaiting(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getInfo(c *course, tokenizer *html.Tokenizer) {
-}
-
-func getField(c *course, fieldCount *int, tokenizer *html.Tokenizer) {
-	switch (*fieldCount) {
-		case 0:
-			getDeliveryMode(c, tokenizer)
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+		for {
+		tokenType := tokenizer.Next()
+		if (tokenType == html.ErrorToken) {
+			fmt.Println("Error Token, exiting . . .")
 			break
-		case 1:
-			getCourseCategoryAndId(c, tokenizer)
+		}
+
+		token := tokenizer.Token()
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Course Category and Id found: %s\n", token.Data)
+			splitData := strings.Split(token.Data, " ");
+			if (len(splitData) != 2) {
+				return errors.New(fmt.Sprintf("Course category and id in unexpected format." + 
+									   " Got %d; Expected 2.", len(splitData)))
+			}
+			c.courseCategory = splitData[0]
+			courseId, err := strconv.Atoi(splitData[1])
+			if err != nil {
+				return err
+			}
+			c.courseId = courseId
 			break
-		case 2:
-			getSection(c, tokenizer)
-			break
-		case 3:
-			getCRN(c, tokenizer)
-			break
-		case 4:
-			getTitle(c, tokenizer)
-			break
-		case 5:
-			getCredits(c, tokenizer)
-			break
-		case 6:
-			getDay(c, tokenizer)
-			break
-		case 7:
-			getTime(c, tokenizer)
-			break
-		case 8:
-			getLocation(c, tokenizer)
-			break
-		case 9:
-			getInstructor(c, tokenizer)
-			break
-		case 10:
-			getStatus(c, tokenizer)
-			break
-		case 11:
-			getWaiting(c, tokenizer)
-			break
+		}
 	}
-	(*fieldCount)++
+	return nil
 }
 
-func getCourseData (token html.Token, tokenizer *html.Tokenizer) course {
+func getSection(c *course, tokenizer *html.Tokenizer) error {
+	/* getSection gets the section from the course.
+
+	Section is the group of the Section (A, B, INA etc.)
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	for {
+		tokenType := tokenizer.Next()
+		if (tokenType == html.ErrorToken) {
+			fmt.Println("Error Token, exiting . . .")
+			break
+		}
+
+		token := tokenizer.Token()
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Section Token found: %s\n", token.Data)
+			c.section = token.Data
+			break
+		}
+	}
+	return nil
+}
+
+func getCRN(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getTitle(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getCredits(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getDay(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getTime(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getLocation(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getInstructor(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getStatus(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getWaiting(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getInfo(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
+func getField(c *course, fieldCount int, tokenizer *html.Tokenizer) error {
+	switch (fieldCount) {
+		case 0:
+			return getDeliveryMode(c, tokenizer)
+		case 1:
+			return getCourseCategoryAndId(c, tokenizer)
+		case 2:
+			return getSection(c, tokenizer)
+		case 3:
+			return getCRN(c, tokenizer)
+		case 4:
+			return getTitle(c, tokenizer)
+		case 5:
+			return getCredits(c, tokenizer)
+		case 6:
+			return getDay(c, tokenizer)
+		case 7:
+			return getTime(c, tokenizer)
+		case 8:
+			return getLocation(c, tokenizer)
+		case 9:
+			return getInstructor(c, tokenizer)
+		case 10:
+			return getStatus(c, tokenizer)
+		case 11:
+			return getWaiting(c, tokenizer)
+	}
+	return nil
+}
+
+func getCourseData (tokenizer *html.Tokenizer) (course, error) {
+	/* getCourseData parses course data from the current table row.
+
+	It will break down the course into parts and get each field based
+	on a count, starting from 0.
+
+	Arguments:
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		course, error: the course parsed, An error that occured during parsing or nil
+	*/
+
 	c := course{}
 	fieldCount := 0
 	fmt.Println("Getting Course Data . . .")
 	for {
 		tokenType := tokenizer.Next()
+		token := tokenizer.Token()
+
 		if (tokenType == html.ErrorToken) {
-			return c
+			return c, nil
 		} else if (tokenType == html.EndTagToken) && (token.Data == "tr") {
-			return c
+			return c, nil
 		}
 
-		token := tokenizer.Token()
-		fmt.Printf("Token: %s ; Type: %s\n", token.Data, tokenType)
+		fmt.Printf("Token: %s ; Type: %s ; fieldCount: %d\n", token.Data, tokenType, fieldCount)
 
 		if (tokenType == html.StartTagToken) && (token.Data == "td") {
-			getField(&c, &fieldCount, tokenizer)
+			err := getField(&c, fieldCount, tokenizer)
+			fieldCount++
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error parsing course: %s\n", err)
+				return c, err
+			}
 		}
 	}
 }
@@ -229,7 +328,7 @@ func parseHTML(body string) {
 		token := tokenizer.Token()
 		fmt.Printf("Token: %s ; Type: %s\n", token.Data, tokenType)
 		if (tokenType == html.StartTagToken) && (token.Data == "tr") {
-			getCourseData(token, tokenizer)
+			getCourseData(tokenizer)
 		}
 	}
 }
