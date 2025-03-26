@@ -37,4 +37,5 @@ func main() {
 
 	fmt.Println("Main executed")
 	scraper()
+	dbinterface()
 }

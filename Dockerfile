@@ -1,4 +1,4 @@
-FROM golang:1.18
+FROM golang:1.24-bookworm
 
 COPY go.mod go.sum /build/
 
