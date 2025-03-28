@@ -74,12 +74,11 @@ func getDeliveryMode(c *course, tokenizer *html.Tokenizer) error {
 
 	for {
 		tokenType := tokenizer.Next()
-		if (tokenType == html.ErrorToken) {
-			fmt.Println("Error Token, exiting . . .")
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Delivery Mode field, exiting . . .")
 			break
 		}
-
-		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Delivery Mode Token found: %s\n", token.Data)
@@ -106,12 +105,11 @@ func getCourseCategoryAndId(c *course, tokenizer *html.Tokenizer) error {
 	*/
 	for {
 		tokenType := tokenizer.Next()
-		if (tokenType == html.ErrorToken) {
-			fmt.Println("Error Token, exiting . . .")
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Course Category field, exiting . . .")
 			break
 		}
-
-		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Course Category and Id found: %s\n", token.Data)
@@ -147,12 +145,11 @@ func getSection(c *course, tokenizer *html.Tokenizer) error {
 
 	for {
 		tokenType := tokenizer.Next()
-		if (tokenType == html.ErrorToken) {
-			fmt.Println("Error Token, exiting . . .")
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Section field, exiting . . .")
 			break
 		}
-
-		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Section Token found: %s\n", token.Data)
@@ -178,12 +175,11 @@ func getCRN(c *course, tokenizer *html.Tokenizer) error {
 
 	for {
 		tokenType := tokenizer.Next()
-		if (tokenType == html.ErrorToken) {
-			fmt.Println("Error Token, exiting . . .")
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of CRN field, exiting . . .")
 			break
 		}
-
-		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("CRN Token found: %s\n", token.Data)
@@ -212,12 +208,11 @@ func getTitle(c *course, tokenizer *html.Tokenizer) error {
 
 	for {
 		tokenType := tokenizer.Next()
-		if (tokenType == html.ErrorToken) {
-			fmt.Println("Error Token, exiting . . .")
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Title field, exiting . . .")
 			break
 		}
-
-		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Title Token found: %s\n", token.Data)
@@ -244,12 +239,11 @@ func getCredits(c *course, tokenizer *html.Tokenizer) error {
 
 	for {
 		tokenType := tokenizer.Next()
-		if (tokenType == html.ErrorToken) {
-			fmt.Println("Error Token, exiting . . .")
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Credits field, exiting . . .")
 			break
 		}
-
-		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Credits Token found: %s\n", token.Data)
@@ -285,12 +279,11 @@ func getDay(c *course, tokenizer *html.Tokenizer) error {
 	}
 	for {
 		tokenType := tokenizer.Next()
-		if (tokenType == html.ErrorToken) {
-			fmt.Println("Error Token, exiting . . .")
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Day field, exiting . . .")
 			break
 		}
-
-		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Day Token found: %s\n", token.Data)
@@ -321,11 +314,11 @@ func getTime(c *course, tokenizer *html.Tokenizer) error {
 	*/
 	for {
 		tokenType := tokenizer.Next()
-		if (tokenType == html.ErrorToken) {
-			fmt.Println("Error Token, exiting . . .")
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Time field, exiting . . .")
 			break
 		}
-		token := tokenizer.Token()
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Time Token found: %s\n", token.Data)
