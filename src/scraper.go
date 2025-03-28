@@ -56,6 +56,9 @@ type courseChild struct {
 	child *courseChild
 }
 
+/* Parsing functions */
+type fieldFunc func (*course, *html.Tokenizer) error
+
 func getDeliveryMode(c *course, tokenizer *html.Tokenizer) error {
 	/* getDeliveryMode gets the delivery mode from the course.
 
@@ -366,6 +369,10 @@ func getStatus(c *course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
+func getStudents(c *course, tokenizer *html.Tokenizer) error {
+	return nil
+}
+
 func getWaiting(c *course, tokenizer *html.Tokenizer) error {
 	return nil
 }
@@ -375,33 +382,40 @@ func getInfo(c *course, tokenizer *html.Tokenizer) error {
 }
 
 func getField(c *course, fieldCount int, tokenizer *html.Tokenizer) error {
-	switch (fieldCount) {
-		case 0:
-			return getDeliveryMode(c, tokenizer)
-		case 1:
-			return getCourseCategoryAndId(c, tokenizer)
-		case 2:
-			return getSection(c, tokenizer)
-		case 3:
-			return getCRN(c, tokenizer)
-		case 4:
-			return getTitle(c, tokenizer)
-		case 5:
-			return getCredits(c, tokenizer)
-		case 6:
-			return getDay(c, tokenizer)
-		case 7:
-			return getTime(c, tokenizer)
-		case 8:
-			return getLocation(c, tokenizer)
-		case 9:
-			return getInstructor(c, tokenizer)
-		case 10:
-			return getStatus(c, tokenizer)
-		case 11:
-			return getWaiting(c, tokenizer)
+	/* getField gets the corresponding field in a 
+	list of field functions from the given count
+
+	Arguments:
+		c (*course): The course to get the field for 
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or Error because field count is out of range
+			   from avaiable functions or nil 
+	*/
+
+	fieldFuncs := []fieldFunc{
+		getDeliveryMode,
+		getCourseCategoryAndId,
+		getSection,
+		getCRN,
+		getTitle,
+		getCredits,
+		getDay,
+		getTime,
+		getLocation,
+		getInstructor,
+		getStatus,
+		getStudents,
+		getWaiting,
 	}
-	return nil
+
+	if (fieldCount < len(fieldFuncs)) {
+		return fieldFuncs[fieldCount](c, tokenizer)
+	} else {
+		return errors.New(fmt.Sprintf("Error: fieldCount is out of bounds of avaiable functions. " + 
+								  "Got %d, Functions: %d", fieldCount, len(fieldFuncs)))
+	}
 }
 
 func getCourseData (tokenizer *html.Tokenizer) (course, error) {
