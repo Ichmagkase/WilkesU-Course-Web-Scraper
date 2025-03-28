@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/html"
 	"errors"
 	"os"
+	"regexp"
 )
 
 /* The course struct is what a course is expected to look like.
@@ -263,10 +264,93 @@ func getCredits(c *course, tokenizer *html.Tokenizer) error {
 }
 
 func getDay(c *course, tokenizer *html.Tokenizer) error {
+	/* getDay gets the days given from the course.
+
+	Days are formated as TR, MWF, WF, R etc.
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	// Days might not exists, check to not have issues
+	if (c.deliveryMode == "OL") {
+		return nil
+	}
+	for {
+		tokenType := tokenizer.Next()
+		if (tokenType == html.ErrorToken) {
+			fmt.Println("Error Token, exiting . . .")
+			break
+		}
+
+		token := tokenizer.Token()
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Day Token found: %s\n", token.Data)
+			c.day = &token.Data 
+			break
+		}
+	}
 	return nil
 }
 
 func getTime(c *course, tokenizer *html.Tokenizer) error {
+	/* getTime gets the time given from the course.
+
+	Course time is formatted as such:
+	0900-0950AM; 1000-1150AM; 1100-1250PM etc.
+	
+	Course time is divided into serveral fields:
+	startTime *string // 0100; 0800; 0430; null etc.
+	endTime *string // 0100; 0800; 0430; null etc.
+	endTimeAMPM *string // AM; PM; null.
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+	for {
+		tokenType := tokenizer.Next()
+		if (tokenType == html.ErrorToken) {
+			fmt.Println("Error Token, exiting . . .")
+			break
+		}
+		token := tokenizer.Token()
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Time Token found: %s\n", token.Data)
+
+			timeFormat := "^([0-9]{4}-[0-9]{4})(?:AM|PM)$"
+			re := regexp.MustCompile(timeFormat)
+			if (re.Match([]byte(token.Data))) {
+				time := token.Data
+
+				// Start time: XX:XX 
+				formattedStartTime := fmt.Sprintf("%s:%s",time[0:2],time[2:4]) 
+				c.startTime = &formattedStartTime
+
+				// End time: XX:XX 
+				formattedEndTime := fmt.Sprintf("%s:%s",time[5:7], time[7:9])
+				c.endTime = &formattedEndTime
+
+				// End time AMPM: AM or PM
+				amOrPm := time[9:11]
+				c.endTimeAMPM = &amOrPm
+
+				return nil
+				
+			} else {
+				return errors.New(fmt.Sprintf("Error: time was not in the right format. Got %s, Expected xxxx-xxxx[AM][PM]", token.Data))
+			}
+		}
+	}
 	return nil
 }
 
