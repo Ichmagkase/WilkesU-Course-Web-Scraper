@@ -28,9 +28,11 @@ type course struct {
 	startTime *string // 0100; 0800; 0430; null etc.
 	endTime *string // 0100; 0800; 0430; null etc.
 	endTimeAMPM *string // AM; PM; null.
-	location *string // SLC 409; BREIS 018; null etc. 
+	location *string // SLC; BREIS; null etc.
+	roomNum *int // 108, 409, any number, null etc.
 	instructor string // Nye B; Simpson H; Kapolka M etc.
 	status string // Open; Nearly; Closed.
+	limit int // Limit to number of students
 	students int 
 	waiting int
 	info *string // HONORS STUDENTS ONLY; CROSS-LISTED WITH IM 350 A etc.
@@ -83,7 +85,6 @@ func getDeliveryMode(c *course, tokenizer *html.Tokenizer) error {
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Delivery Mode Token found: %s\n", token.Data)
 			c.deliveryMode = token.Data
-			break
 		}
 	}
 	return nil
@@ -124,7 +125,6 @@ func getCourseCategoryAndId(c *course, tokenizer *html.Tokenizer) error {
 				return err
 			}
 			c.courseId = courseId
-			break
 		}
 	}
 	return nil
@@ -154,7 +154,6 @@ func getSection(c *course, tokenizer *html.Tokenizer) error {
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Section Token found: %s\n", token.Data)
 			c.section = token.Data
-			break
 		}
 	}
 	return nil
@@ -188,11 +187,9 @@ func getCRN(c *course, tokenizer *html.Tokenizer) error {
 				return err
 			}
 			c.crn = parsedCRN
-			break
 		}
 	}
 	return nil
-
 }
 
 func getTitle(c *course, tokenizer *html.Tokenizer) error {
@@ -217,11 +214,9 @@ func getTitle(c *course, tokenizer *html.Tokenizer) error {
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Title Token found: %s\n", token.Data)
 			c.title = token.Data
-			break
 		}
 	}
 	return nil
-
 }
 
 func getCredits(c *course, tokenizer *html.Tokenizer) error {
@@ -252,12 +247,9 @@ func getCredits(c *course, tokenizer *html.Tokenizer) error {
 				return err
 			}
 			c.credits = float32(parsedCredits)
-			break
 		}
 	}
 	return nil
-
-
 }
 
 func getDay(c *course, tokenizer *html.Tokenizer) error {
@@ -288,7 +280,6 @@ func getDay(c *course, tokenizer *html.Tokenizer) error {
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Day Token found: %s\n", token.Data)
 			c.day = &token.Data 
-			break
 		}
 	}
 	return nil
@@ -340,8 +331,6 @@ func getTime(c *course, tokenizer *html.Tokenizer) error {
 				amOrPm := time[9:11]
 				c.endTimeAMPM = &amOrPm
 
-				return nil
-				
 			} else {
 				return errors.New(fmt.Sprintf("Error: time was not in the right format. Got %s, Expected xxxx-xxxx[AM][PM]", token.Data))
 			}
@@ -351,22 +340,173 @@ func getTime(c *course, tokenizer *html.Tokenizer) error {
 }
 
 func getLocation(c *course, tokenizer *html.Tokenizer) error {
+	/* getLocation gets the location and the room number 
+	of the course
+
+	Course location is what building the course is in (SLC, DDD etc.)
+	Course room number is the number of the room in that building 
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+	for {
+		tokenType := tokenizer.Next()
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Location field, exiting . . .")
+			break
+		}
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Course Location found: %s\n", token.Data)
+			splitData := strings.Split(token.Data, " ");
+			if (len(splitData) != 2) {
+				return errors.New(fmt.Sprintf("Course Location in unexpected format." + 
+									   " Got %d; Expected 2.", len(splitData)))
+			}
+			c.location = &splitData[0]
+			roomNum, err := strconv.Atoi(splitData[1])
+			if err != nil {
+				return err
+			}
+			c.roomNum = &roomNum 
+		}
+	}
 	return nil
 }
 
 func getInstructor(c *course, tokenizer *html.Tokenizer) error {
+	/* getInstructor gets the instructor from the course.
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	for {
+		tokenType := tokenizer.Next()
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Instructor field, exiting . . .")
+			break
+		}
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Instructor Token found: %s\n", token.Data)
+			c.instructor = token.Data
+		}
+	}
 	return nil
 }
 
 func getStatus(c *course, tokenizer *html.Tokenizer) error {
+	/* getStatus gets the status from the course.
+
+	Course status is how full the course is (Nearly, Closed, Open)
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	textTokenCount := 0
+	for {
+		tokenType := tokenizer.Next()
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Status field, exiting . . .")
+			break
+		}
+
+		if (tokenType == html.TextToken && textTokenCount == 0) {
+
+			fmt.Printf("Status Token found: %s\n", token.Data)
+			c.status = token.Data
+			textTokenCount++
+
+		} else if (tokenType == html.TextToken && textTokenCount == 1) {
+
+			fmt.Printf("Limit Token found: %s\n", token.Data)
+			limit, err := strconv.Atoi(token.Data)
+			if err != nil {
+				return err
+			} else {
+				c.limit = limit
+			}
+		}
+	}
 	return nil
 }
 
 func getStudents(c *course, tokenizer *html.Tokenizer) error {
+	/* getStudents gets the number of students in the course.
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	for {
+		tokenType := tokenizer.Next()
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Students field, exiting . . .")
+			break
+		}
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Student Token found: %s\n", token.Data)
+			parsedStudents, err := strconv.Atoi(token.Data)
+			if err != nil {
+				return err
+			}
+			c.students = parsedStudents 
+		}
+	}
 	return nil
 }
 
 func getWaiting(c *course, tokenizer *html.Tokenizer) error {
+	/* getStudents gets the number of students waiting in the course.
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	for {
+		tokenType := tokenizer.Next()
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Waiting field, exiting . . .")
+			break
+		}
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Waiting Token found: %s\n", token.Data)
+			parsedWaiting, err := strconv.Atoi(token.Data)
+			if err != nil {
+				return err
+			}
+			c.students = parsedWaiting 
+		}
+	}
 	return nil
 }
 
