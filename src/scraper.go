@@ -61,6 +61,74 @@ type courseChild struct {
 /* Parsing functions */
 type fieldFunc func (*course, *html.Tokenizer) error
 
+func courseToString(c course) string {
+    // Helper function to safely dereference pointer strings
+    safeString := func(s *string) string {
+        if s == nil {
+            return "N/A"
+        }
+        return *s
+    }
+
+    // Helper function to safely dereference pointer integers
+    safeInt := func(i *int) string {
+        if i == nil {
+            return "N/A"
+        }
+        return fmt.Sprintf("%d", *i)
+    }
+
+    // Build the course description
+    description := fmt.Sprintf(`Course Details:
+	- Course ID: %d
+	- Title: %s
+	- Delivery Mode: %s
+	- Category: %s
+	- Section: %s
+	- CRN: %d
+	- Credits: %.2f
+	- Instructor: %s
+	- Status: %s
+
+	Schedule:
+	- Days: %s
+	- Start Time: %s
+	- End Time: %s %s
+
+	Enrollment:
+	- Limit: %d
+	- Current Students: %d
+	- Waiting List: %d
+
+	Additional Information:
+	- Location: %s
+	- Room Number: %s
+	- Online: %t
+	- Special Info: %s`,
+        c.courseId,
+        c.title,
+        c.deliveryMode,
+        c.courseCategory,
+        c.section,
+        c.crn,
+        c.credits,
+        c.instructor,
+        c.status,
+        safeString(c.day),
+        safeString(c.startTime),
+        safeString(c.endTime),
+        safeString(c.endTimeAMPM),
+        c.limit,
+        c.students,
+        c.waiting,
+        safeString(c.location),
+        safeInt(c.roomNum),
+        c.isOnline,
+        safeString(c.info))
+
+    return description
+}
+
 func getDeliveryMode(c *course, tokenizer *html.Tokenizer) error {
 	/* getDeliveryMode gets the delivery mode from the course.
 
@@ -572,8 +640,10 @@ func getCourseData (tokenizer *html.Tokenizer) (course, error) {
 		token := tokenizer.Token()
 
 		if (tokenType == html.ErrorToken) {
+			fmt.Println(courseToString(c))
 			return c, nil
 		} else if (tokenType == html.EndTagToken) && (token.Data == "tr") {
+			fmt.Println(courseToString(c))
 			return c, nil
 		}
 
