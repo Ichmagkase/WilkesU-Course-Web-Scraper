@@ -1,17 +1,13 @@
 package main
 
 import (
-    //"context"
     "fmt"
     // "net/http"
     //"time"
-
-    // "go.mongodb.org/mongo-driver/mongo"
-    // "go.mongodb.org/mongo-driver/mongo/options"
-    // "go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func main() {
+
 	// make URL
 	// url := "https://example.com"
 
@@ -37,5 +33,5 @@ func main() {
 
 	fmt.Println("Main executed")
 	scraper()
-	dbinterface()
+	test()
 }
