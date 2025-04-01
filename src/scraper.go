@@ -37,26 +37,12 @@ type course struct {
 	waiting int
 	info *string // HONORS STUDENTS ONLY; CROSS-LISTED WITH IM 350 A etc.
 	isOnline bool // This is for full online classes (OL) not SOL or HYB
-	child *courseChild
+	isCourseChild bool // If this course refers to a pervious course
+	courseChild *course
 }
 
 /* courseChild is for more time slots when courses dont always
 meet at the same time. 
-
-For example, CS 125 may meet on MW 0100-0215PM,
-but on F 0900-1050AM. This is probably a lab, but is not listed as a lab,
-thus we add a courseChild
-*/
-type courseChild struct {
-	credits float32
-	day *string
-	startTime *string
-	endTime *string
-	endTimeAMPM *string
-	location *string
-	info *string
-	child *courseChild
-}
 
 /* Parsing functions */
 type fieldFunc func (*course, *html.Tokenizer) error
@@ -125,6 +111,14 @@ func courseToString(c course) string {
         safeInt(c.roomNum),
         c.isOnline,
         safeString(c.info))
+
+    if c.courseChild != nil {
+        childString := fmt.Sprintf(`
+	Additional Course Section:
+	%s`, courseToString(*c.courseChild))
+        
+        description += childString
+    }
 
     return description
 }
@@ -579,10 +573,56 @@ func getWaiting(c *course, tokenizer *html.Tokenizer) error {
 }
 
 func getInfo(c *course, tokenizer *html.Tokenizer) error {
+	/* getInfo gets info related to a previous course.
+
+	Info will look something like: HONORS STUDENTS ONLY
+
+	Arguments:
+		c (*course): The course to add the delivery mode to.
+		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+	
+	Returns:
+		error: Error during parsing or nil 
+	*/
+
+	for {
+		tokenType := tokenizer.Next()
+		token := tokenizer.Token()
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
+			fmt.Println("End of Info field, exiting . . .")
+			break
+		}
+
+		if (tokenType == html.TextToken) {
+			fmt.Printf("Info Token found: %s\n", token.Data)
+			info := token.Data
+			c.info = &info
+		}
+	}
 	return nil
 }
 
-func getField(c *course, fieldCount int, tokenizer *html.Tokenizer) error {
+func getColumnCount (tokenizer html.Tokenizer) (int) {
+	// Counts columns from the current postion
+	// Colums are defined when the tokenizer hits </td>
+	columnCount := 0
+	
+	for {
+		tokenType := tokenizer.Next()
+		token := tokenizer.Token()
+
+		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "tr")))  {
+			break
+		}
+
+		if ((tokenType == html.EndTagToken) && (token.Data == "td")) {
+			columnCount++
+		}
+	}
+	return columnCount	
+}
+
+func getField(c *course, fieldCount *int, tokenizer *html.Tokenizer) error {
 	/* getField gets the corresponding field in a 
 	list of field functions from the given count
 
@@ -610,9 +650,32 @@ func getField(c *course, fieldCount int, tokenizer *html.Tokenizer) error {
 		getStudents,
 		getWaiting,
 	}
+	// Course Child functions ([getInfo] |  [6-8])
+	if (c.isCourseChild) {
 
-	if (fieldCount < len(fieldFuncs)) {
-		return fieldFuncs[fieldCount](c, tokenizer)
+		columCount := getColumnCount(*tokenizer)
+		
+		switch (columCount) {
+			case 2: // 2 columns
+				tokenizer.Next()
+				getInfo(c, tokenizer)
+				break
+			case 5: // 5 columns
+				tokenizer.Next()
+				getDay(c, tokenizer)
+				getTime(c, tokenizer)
+				getLocation(c, tokenizer)
+				break
+			default:
+				break
+		}
+
+		return nil 
+
+	} else if (*fieldCount < len(fieldFuncs)) {
+		result := fieldFuncs[*fieldCount](c, tokenizer)
+		*fieldCount++
+		return result
 	} else {
 		return errors.New(fmt.Sprintf("Error: fieldCount is out of bounds of avaiable functions. " + 
 								  "Got %d, Functions: %d", fieldCount, len(fieldFuncs)))
@@ -640,21 +703,26 @@ func getCourseData (tokenizer *html.Tokenizer) (course, error) {
 		token := tokenizer.Token()
 
 		if (tokenType == html.ErrorToken) {
-			fmt.Println(courseToString(c))
 			return c, nil
 		} else if (tokenType == html.EndTagToken) && (token.Data == "tr") {
-			fmt.Println(courseToString(c))
 			return c, nil
 		}
 
 		fmt.Printf("Token: %s ; Type: %s ; fieldCount: %d\n", token.Data, tokenType, fieldCount)
 
 		if (tokenType == html.StartTagToken) && (token.Data == "td") {
-			err := getField(&c, fieldCount, tokenizer)
-			fieldCount++
+			// Check if <td> has attribute 'colspan'
+			// If so, then this row is extra info for the
+			// pervious row
+			for _, attr := range token.Attr {
+				if (attr.Key == "colspan") {
+					c.isCourseChild = true
+					fmt.Println("Course Child Found")
+				}
+			}
+			err := getField(&c, &fieldCount, tokenizer)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error parsing course: %s\n", err)
-				return c, err
+				return c, errors.New(fmt.Sprintf("Error parsing course: %s", err)) 
 			}
 		}
 	}
@@ -695,6 +763,8 @@ func parseHTML(body string) {
 		Umm . . . Cheddar!
 	*/
 	tokenizer := html.NewTokenizer(strings.NewReader(body))
+	courses := []course{}
+	i := -1 
 
 	// skip to tbody
 	for {
@@ -703,7 +773,6 @@ func parseHTML(body string) {
 			return
 		}
 		token := tokenizer.Token()
-		fmt.Printf("Token: %s ; Type: %s\n", token.Data, tokenType)
 		if (tokenType == html.EndTagToken) && (token.Data == "thead") {
 			fmt.Println("At <tbody>, exiting . . .")
 			tokenizer.Next() // </thead> -> <tbody>
@@ -720,7 +789,21 @@ func parseHTML(body string) {
 		token := tokenizer.Token()
 		fmt.Printf("Token: %s ; Type: %s\n", token.Data, tokenType)
 		if (tokenType == html.StartTagToken) && (token.Data == "tr") {
-			getCourseData(tokenizer)
+			c, err := getCourseData(tokenizer)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				return
+			} else {
+				if (c.isCourseChild) {
+					courses[i].courseChild = &c
+					fmt.Println(courseToString(courses[i]))
+				} else {
+					fmt.Println(courseToString(c))
+					courses = append(courses, c)
+					i++
+					courseToString(courses[i])
+				}
+			}
 		}
 	}
 }
