@@ -654,6 +654,7 @@ func getInfo(c *Course, tokenizer *html.Tokenizer, fieldCount *int, startToken h
 	for {
 		tokenType := tokenizer.Next()
 		token := tokenizer.Token()
+		fmt.Printf("Info: %s & %s \n", token.Data, tokenType)
 		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "td")))  {
 			fmt.Println("End of Info field, exiting . . .")
 			break
@@ -666,34 +667,6 @@ func getInfo(c *Course, tokenizer *html.Tokenizer, fieldCount *int, startToken h
 		}
 	}
 	return nil
-}
-
-func getColumnCount (tokenizer html.Tokenizer) int {
-	/* getColumCount gets the number of colums in the current row.
-
-	Arguments:
-		tokenizer (html.Tokenizer): The beginning of the column.
-
-	Returns:
-		int: The number of times </td> is seen.
-	*/
-	columnCount := 0
-	
-	for {
-		tokenType := tokenizer.Next()
-		token := tokenizer.Token()
-
-		fmt.Printf("%s\n", token.Data)
-
-		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "tr")))  {
-			break
-		}
-
-		if ((tokenType == html.EndTagToken) && (token.Data == "td")) {
-			columnCount++
-		}
-	}
-	return columnCount	
 }
 
 func getField(c *Course, fieldCount *int, tokenizer *html.Tokenizer, startToken html.Token) error {
@@ -727,26 +700,30 @@ func getField(c *Course, fieldCount *int, tokenizer *html.Tokenizer, startToken 
 
 	if (c.IsCourseChild) {
 
-		columnCount := getColumnCount(*tokenizer)
-		var err error 
-		switch (columnCount) {
-			case 2: // 2 columns: Just extra info
-				tokenizer.Next()
-				err = getInfo(c, tokenizer, fieldCount, startToken)
+		var err error
+		tokenizer.Next() // <td> -> </td>
+		tokenizer.Next() // </td> -> <td>
+		token := tokenizer.Token()
+		hasColspan := false
+		for _, attr := range token.Attr {
+			if (attr.Key == "colspan") {
+				hasColspan = true
 				break
-			case 5: // 5 columns: An extra time slot
-				tokenizer.Next()
-				err = getDay(c, tokenizer, fieldCount, startToken)
-				if err !=  nil { break }
-				err = getTime(c, tokenizer, fieldCount, startToken)
-				if err != nil { break }
-				err = getLocation(c, tokenizer, fieldCount, startToken)
-				tokenizer.Next()
-				break
-			default:
-				err = errors.New(fmt.Sprintf("No column pattern for course child. Got %d.", columnCount))
-				break
+			}
 		}
+		if (hasColspan) {
+			fmt.Printf("Course Child is extra info\n")
+			err = getInfo(c, tokenizer, fieldCount, startToken)
+		} else {
+			fmt.Printf("Course Child is extra time\n")
+			err = getDay(c, tokenizer, fieldCount, startToken)
+			if err !=  nil { return err }
+			err = getTime(c, tokenizer, fieldCount, startToken)
+			if err != nil { return err }
+			err = getLocation(c, tokenizer, fieldCount, startToken)
+			tokenizer.Next()
+		}
+
 		return err 
 
 	} else if (*fieldCount < len(fieldFuncs)) {
@@ -785,7 +762,7 @@ func getCourseData (tokenizer *html.Tokenizer) (Course, error) {
 			return c, nil
 		}
 
-		fmt.Printf("Main: Token: %s ; Type: %s ; fieldCount: %d\n", token.Data, tokenType, fieldCount)
+		fmt.Printf("In Course: Token[%s] Type[%s] fieldCount[%d]\n", token.Data, tokenType, fieldCount)
 
 		if (tokenType == html.StartTagToken) && (token.Data == "td") {
 			// Check if <td> has attribute 'colspan' and 6
@@ -861,10 +838,11 @@ func parseHTML(body string) {
 		tokenType := tokenizer.Next()
 		if tokenType == html.ErrorToken {
 			// EOF: Done reading
+			fmt.Printf("Done.\n")
 			return
 		}
 		token := tokenizer.Token()
-		fmt.Printf("Token: %s ; Type: %s\n", token.Data, tokenType)
+		fmt.Printf("Token[%s] Type[%s]\n", token.Data, tokenType)
 		if (tokenType == html.StartTagToken) && (token.Data == "tr") {
 			c, err := getCourseData(tokenizer)
 			if err != nil {
@@ -872,13 +850,17 @@ func parseHTML(body string) {
 				return
 			} else {
 				if (c.IsCourseChild) {
-					courses[i].CourseChild = &c
+					n := &courses[i]
+					for (n.CourseChild != nil) {
+						n = n.CourseChild
+
+					}
+					n.CourseChild = &c
 					fmt.Println(courseToString(courses[i]))
 				} else {
 					fmt.Println(courseToString(c))
 					courses = append(courses, c)
 					i++
-					courseToString(courses[i])
 				}
 			}
 		}
