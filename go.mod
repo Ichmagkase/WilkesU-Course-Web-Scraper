@@ -1,4 +1,4 @@
-module wilkesu-scrapy/src
+module wilkesu-scrapy
 
 go 1.23
 

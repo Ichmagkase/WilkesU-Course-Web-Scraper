@@ -1,4 +1,4 @@
-package main
+package scraper
 
 import (
 	"context"
@@ -40,7 +40,7 @@ func insertCourse(courseData Course, semester string) {
 /*
  * An exmaple insertion of how to insert a course into the db
  */
-func exampleInsertion() {
+func ExampleInsertion() {
 	// Example insertion:
 	day := "MW"
 	startTime := "0100"

@@ -1,4 +1,4 @@
-package main
+package scraper
 
 import (
 	"fmt"
@@ -808,7 +808,7 @@ func parseHTML(body string) {
 	}
 }
 
-func scraper() {
+func Scraper() {
 	fmt.Println("Scraper service started")
 
 	body, err := getHTML("https://rosters.wilkes.edu/scheds/coursesF25.html")
