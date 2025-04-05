@@ -431,9 +431,9 @@ func getTime(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken 
 
 			} else {
 				if (token.Data == "TBA") {
-					c.startTime = &token.Data
-					c.endTime = &token.Data
-					c.endTimeAMPM = &token.Data
+					c.StartTime = &token.Data
+					c.EndTime = &token.Data
+					c.EndTimeAMPM = &token.Data
 				} else {
 					return errors.New(fmt.Sprintf("Error: time was not in the right format. Got %s, Expected xxxx-xxxx[AM][PM] OR TBA", token.Data))
 				}
@@ -459,10 +459,10 @@ func getLocation(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startTo
 	Returns:
 		error: Error during parsing or nil 
 	*/
-	if (c.deliveryMode == "SOL") {
+	if (c.DeliveryMode == "SOL") {
 		fmt.Printf("Course Location found: Online\n")
 		output := "Online"
-		c.location = &output 
+		c.Location = &output 
 		fmt.Println("End of Location field, exiting . . .")
 		return nil
 	}
@@ -477,19 +477,19 @@ func getLocation(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startTo
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Course Location found: %s\n", token.Data)
 			if (token.Data == "TBA") {
-				c.location = &token.Data
+				c.Location = &token.Data
 			} else {
 				splitData := strings.Split(token.Data, " ");
 				if (len(splitData) != 2) {
 					return errors.New(fmt.Sprintf("Course Location in unexpected format." + 
 									   " Got %d; Expected 2.", len(splitData)))
 				}
-				c.location = &splitData[0]
+				c.Location = &splitData[0]
 				roomNum, err := strconv.Atoi(splitData[1])
 				if err != nil {
-					c.location = &token.Data
+					c.Location = &token.Data
 				} else {
-					c.roomNum = &roomNum
+					c.RoomNum = &roomNum
 				}
 			}
 		}
