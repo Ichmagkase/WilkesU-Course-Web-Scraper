@@ -45,10 +45,18 @@ type Course struct {
 meet at the same time. 
 
 /* Parsing functions */
-type fieldFunc func (*Course, *html.Tokenizer) error
+type fieldFunc func (*Course, *html.Tokenizer, *int, html.Token) error
 
 func courseToString(c Course) string {
-    // Helper function to safely dereference pointer strings
+	/* courseToString takes a course and parses it into a string
+
+	Arguments:
+		c (course): the course to stringify.
+
+	Returns:
+		string: string representation of a course.
+	*/
+
     safeString := func(s *string) string {
         if s == nil {
             return "N/A"
@@ -123,7 +131,7 @@ func courseToString(c Course) string {
     return description
 }
 
-func getDeliveryMode(c *Course, tokenizer *html.Tokenizer) error {
+func getDeliveryMode(c *Course, tokenizer *html.Tokenizer, fieldCount *int, startToken html.Token) error {
 	/* getDeliveryMode gets the delivery mode from the course.
 
 	Delivery modes is how the course is offered (F2F, HYB, OL etc.)
@@ -131,6 +139,8 @@ func getDeliveryMode(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -152,7 +162,7 @@ func getDeliveryMode(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getCourseCategoryAndId(c *Course, tokenizer *html.Tokenizer) error {
+func getCourseCategoryAndId(c *Course, tokenizer *html.Tokenizer, fieldCount *int, startToken html.Token) error {
 	/* getCourseCategoryAndId gets the course category 
 	and id of the course.
 
@@ -162,6 +172,8 @@ func getCourseCategoryAndId(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -192,7 +204,7 @@ func getCourseCategoryAndId(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getSection(c *Course, tokenizer *html.Tokenizer) error {
+func getSection(c *Course, tokenizer *html.Tokenizer, fieldCount *int, startToken html.Token) error {
 	/* getSection gets the section from the course.
 
 	Section is the group of the Section (A, B, INA etc.)
@@ -200,6 +212,8 @@ func getSection(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -221,7 +235,7 @@ func getSection(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getCRN(c *Course, tokenizer *html.Tokenizer) error {
+func getCRN(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getCRN gets the CRN from the course.
 
 	CRN is the course registration number (31233,23213, 0 etc.)
@@ -229,6 +243,8 @@ func getCRN(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -254,12 +270,14 @@ func getCRN(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getTitle(c *Course, tokenizer *html.Tokenizer) error {
+func getTitle(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getTitle gets the name from the course.
 
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -281,7 +299,7 @@ func getTitle(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getCredits(c *Course, tokenizer *html.Tokenizer) error {
+func getCredits(c *Course, tokenizer *html.Tokenizer, fieldCount *int, startToken html.Token) error {
 	/* getCredits gets the credits from the course.
 
 	Credits are floats (3.00, 4.00, 1.00, etc.)
@@ -289,6 +307,8 @@ func getCredits(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -314,7 +334,7 @@ func getCredits(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getDay(c *Course, tokenizer *html.Tokenizer) error {
+func getDay(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getDay gets the days given from the course.
 
 	Days are formated as TR, MWF, WF, R etc.
@@ -322,15 +342,29 @@ func getDay(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
 	*/
 
-	// Days might not exists, check to not have issues
-	if (c.DeliveryMode == "OL") {
-		return nil
+	// Check if date, time, and location exists
+	for _, attr := range startToken.Attr {
+		// Day, Time, Location, DNE
+		if (attr.Key == "colspan" && attr.Val == "3") {
+
+			// Move tokenzier to the next row
+			fmt.Println("Day, Time, and Location unknow . . . skipping to instructor")
+			tokenizer.Next()
+			t := tokenizer.Token()
+			c.Location = &t.Data
+			tokenizer.Next()
+			*fieldCount = *fieldCount + 2
+			return nil
+		}
 	}
+
 	for {
 		tokenType := tokenizer.Next()
 		token := tokenizer.Token()
@@ -347,7 +381,7 @@ func getDay(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getTime(c *Course, tokenizer *html.Tokenizer) error {
+func getTime(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getTime gets the time given from the course.
 
 	Course time is formatted as such:
@@ -361,6 +395,8 @@ func getTime(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -394,14 +430,20 @@ func getTime(c *Course, tokenizer *html.Tokenizer) error {
 				c.EndTimeAMPM = &amOrPm
 
 			} else {
-				return errors.New(fmt.Sprintf("Error: time was not in the right format. Got %s, Expected xxxx-xxxx[AM][PM]", token.Data))
+				if (token.Data == "TBA") {
+					c.startTime = &token.Data
+					c.endTime = &token.Data
+					c.endTimeAMPM = &token.Data
+				} else {
+					return errors.New(fmt.Sprintf("Error: time was not in the right format. Got %s, Expected xxxx-xxxx[AM][PM] OR TBA", token.Data))
+				}
 			}
 		}
 	}
 	return nil
 }
 
-func getLocation(c *Course, tokenizer *html.Tokenizer) error {
+func getLocation(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getLocation gets the location and the room number 
 	of the course
 
@@ -411,10 +453,19 @@ func getLocation(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
 	*/
+	if (c.deliveryMode == "SOL") {
+		fmt.Printf("Course Location found: Online\n")
+		output := "Online"
+		c.location = &output 
+		fmt.Println("End of Location field, exiting . . .")
+		return nil
+	}
 	for {
 		tokenType := tokenizer.Next()
 		token := tokenizer.Token()
@@ -425,28 +476,35 @@ func getLocation(c *Course, tokenizer *html.Tokenizer) error {
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Course Location found: %s\n", token.Data)
-			splitData := strings.Split(token.Data, " ");
-			if (len(splitData) != 2) {
-				return errors.New(fmt.Sprintf("Course Location in unexpected format." + 
+			if (token.Data == "TBA") {
+				c.location = &token.Data
+			} else {
+				splitData := strings.Split(token.Data, " ");
+				if (len(splitData) != 2) {
+					return errors.New(fmt.Sprintf("Course Location in unexpected format." + 
 									   " Got %d; Expected 2.", len(splitData)))
+				}
+				c.location = &splitData[0]
+				roomNum, err := strconv.Atoi(splitData[1])
+				if err != nil {
+					c.location = &token.Data
+				} else {
+					c.roomNum = &roomNum
+				}
 			}
-			c.Location = &splitData[0]
-			roomNum, err := strconv.Atoi(splitData[1])
-			if err != nil {
-				return err
-			}
-			c.RoomNum = &roomNum
 		}
 	}
 	return nil
 }
 
-func getInstructor(c *Course, tokenizer *html.Tokenizer) error {
+func getInstructor(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getInstructor gets the instructor from the course.
 
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -468,7 +526,7 @@ func getInstructor(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getStatus(c *Course, tokenizer *html.Tokenizer) error {
+func getStatus(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getStatus gets the status from the course.
 
 	Course status is how full the course is (Nearly, Closed, Open)
@@ -476,6 +534,8 @@ func getStatus(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -510,12 +570,14 @@ func getStatus(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getStudents(c *Course, tokenizer *html.Tokenizer) error {
+func getStudents(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getStudents gets the number of students in the course.
 
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -541,12 +603,14 @@ func getStudents(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getWaiting(c *Course, tokenizer *html.Tokenizer) error {
+func getWaiting(c *Course, tokenizer *html.Tokenizer, fieldCount *int,  startToken html.Token) error {
 	/* getStudents gets the number of students waiting in the course.
 
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -566,13 +630,13 @@ func getWaiting(c *Course, tokenizer *html.Tokenizer) error {
 			if err != nil {
 				return err
 			}
-			c.Students = parsedWaiting
+			c.Waiting = parsedWaiting 
 		}
 	}
 	return nil
 }
 
-func getInfo(c *Course, tokenizer *html.Tokenizer) error {
+func getInfo(c *Course, tokenizer *html.Tokenizer, fieldCount *int, startToken html.Token) error {
 	/* getInfo gets info related to a previous course.
 
 	Info will look something like: HONORS STUDENTS ONLY
@@ -580,6 +644,8 @@ func getInfo(c *Course, tokenizer *html.Tokenizer) error {
 	Arguments:
 		c (*course): The course to add the delivery mode to.
 		tokenizer (*html.Tokenizer): The tokenizer to use to get the data.
+		fieldCount (*int): The current field the parser is on.
+		startToken (html.Token): The current token this field is starting on.
 	
 	Returns:
 		error: Error during parsing or nil 
@@ -602,14 +668,22 @@ func getInfo(c *Course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getColumnCount (tokenizer html.Tokenizer) (int) {
-	// Counts columns from the current postion
-	// Colums are defined when the tokenizer hits </td>
+func getColumnCount (tokenizer html.Tokenizer) int {
+	/* getColumCount gets the number of colums in the current row.
+
+	Arguments:
+		tokenizer (html.Tokenizer): The beginning of the column.
+
+	Returns:
+		int: The number of times </td> is seen.
+	*/
 	columnCount := 0
 	
 	for {
 		tokenType := tokenizer.Next()
 		token := tokenizer.Token()
+
+		fmt.Printf("%s\n", token.Data)
 
 		if ((tokenType == html.ErrorToken) || ((tokenType == html.EndTagToken) && (token.Data == "tr")))  {
 			break
@@ -622,7 +696,7 @@ func getColumnCount (tokenizer html.Tokenizer) (int) {
 	return columnCount	
 }
 
-func getField(c *Course, fieldCount *int, tokenizer *html.Tokenizer) error {
+func getField(c *Course, fieldCount *int, tokenizer *html.Tokenizer, startToken html.Token) error {
 	/* getField gets the corresponding field in a 
 	list of field functions from the given count
 
@@ -632,7 +706,7 @@ func getField(c *Course, fieldCount *int, tokenizer *html.Tokenizer) error {
 	
 	Returns:
 		error: Error during parsing or Error because field count is out of range
-			   from avaiable functions or nil 
+		       from avaiable functions or nil 
 	*/
 
 	fieldFuncs := []fieldFunc{
@@ -650,32 +724,35 @@ func getField(c *Course, fieldCount *int, tokenizer *html.Tokenizer) error {
 		getStudents,
 		getWaiting,
 	}
-	// Course Child functions ([getInfo] |  [6-8])
+
 	if (c.IsCourseChild) {
 
-		columCount := getColumnCount(*tokenizer)
-		
-		switch (columCount) {
-			case 2: // 2 columns
+		columnCount := getColumnCount(*tokenizer)
+		var err error 
+		switch (columnCount) {
+			case 2: // 2 columns: Just extra info
 				tokenizer.Next()
-				getInfo(c, tokenizer)
+				err = getInfo(c, tokenizer, fieldCount, startToken)
 				break
-			case 5: // 5 columns
+			case 5: // 5 columns: An extra time slot
 				tokenizer.Next()
-				getDay(c, tokenizer)
-				getTime(c, tokenizer)
-				getLocation(c, tokenizer)
+				err = getDay(c, tokenizer, fieldCount, startToken)
+				if err !=  nil { break }
+				err = getTime(c, tokenizer, fieldCount, startToken)
+				if err != nil { break }
+				err = getLocation(c, tokenizer, fieldCount, startToken)
+				tokenizer.Next()
 				break
 			default:
+				err = errors.New(fmt.Sprintf("No column pattern for course child. Got %d.", columnCount))
 				break
 		}
-
-		return nil 
+		return err 
 
 	} else if (*fieldCount < len(fieldFuncs)) {
-		result := fieldFuncs[*fieldCount](c, tokenizer)
+		err := fieldFuncs[*fieldCount](c, tokenizer, fieldCount, startToken)
 		*fieldCount++
-		return result
+		return err 
 	} else {
 		return errors.New(fmt.Sprintf("Error: fieldCount is out of bounds of avaiable functions. " + 
 								  "Got %d, Functions: %d", fieldCount, len(fieldFuncs)))
@@ -708,19 +785,19 @@ func getCourseData (tokenizer *html.Tokenizer) (Course, error) {
 			return c, nil
 		}
 
-		fmt.Printf("Token: %s ; Type: %s ; fieldCount: %d\n", token.Data, tokenType, fieldCount)
+		fmt.Printf("Main: Token: %s ; Type: %s ; fieldCount: %d\n", token.Data, tokenType, fieldCount)
 
 		if (tokenType == html.StartTagToken) && (token.Data == "td") {
-			// Check if <td> has attribute 'colspan'
+			// Check if <td> has attribute 'colspan' and 6
 			// If so, then this row is extra info for the
 			// pervious row
 			for _, attr := range token.Attr {
-				if (attr.Key == "colspan") {
+				if (attr.Key == "colspan" && fieldCount == 0) {
 					c.IsCourseChild = true
 					fmt.Println("Course Child Found")
 				}
 			}
-			err := getField(&c, &fieldCount, tokenizer)
+			err := getField(&c, &fieldCount, tokenizer, token)
 			if err != nil {
 				return c, errors.New(fmt.Sprintf("Error parsing course: %s", err)) 
 			}
