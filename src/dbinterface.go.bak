@@ -1,0 +1,132 @@
+package main
+
+import (
+	"context"
+    "fmt"
+
+    "go.mongodb.org/mongo-driver/v2/mongo"
+    // "go.mongodb.org/mongo-driver/v2/bson"
+    "go.mongodb.org/mongo-driver/v2/mongo/options"
+)
+
+// // dbinterface main
+// func dbinterface() {
+// 	// uri := "mongodb://mongodb:27017"
+// 	// serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+// 	// opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+// 	// client, err := mongo.Connect(opts)
+// 	// db := client.Database("db")
+
+// 	// if err != nil {
+// 	// 	fmt.Println("Something went wrong in the client")
+// 	// 	panic(err)
+// 	// }
+// 	// defer func() {
+// 	// 	if err = client.Disconnect(context.TODO()); err != nil {
+// 	// 		panic(err)
+// 	// 	}
+// 	// }()
+
+
+// 	// Send a ping to confirm a successful connection
+// 	var result bson.M
+// 	command := bson.D{{"hello", 1}}
+// 	err = db.RunCommand(context.TODO(), command).Decode(&result)
+// 	if err != nil {
+// 		fmt.Println("Error running command!")
+// 		fmt.Println(err)
+// 		panic(err)
+// 		fmt.Println("Successfully panicked")
+// 	}
+// 	if err = client.Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result); err != nil {
+// 		fmt.Println("Something went wrong with pinging")
+// 		panic(err)
+// 	}
+// 	fmt.Println("Connection established with database!")
+// 	test(&db)
+// }
+
+func insertCourse(courseData Course, semester string) {
+	fmt.Println("A course is being inserted ... ")
+	uri := "mongodb://mongodb:27017"
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	client, err := mongo.Connect(opts)
+	db := client.Database("admin").Collection(semester)
+
+	if err != nil {
+		fmt.Println("Error initializing Client!")
+		panic(err)
+	}
+
+	go func() {
+		defer fmt.Printf("Inserted %s %d into %s\n", courseData.CourseCategory, courseData,CourseId, semester)
+		result, err := db.InsertOne(
+			context.TODO(),
+			courseData,
+		)
+		if err != nil {
+			panic(err)
+		}
+	}()
+}
+
+func test() {
+	uri := "mongodb://mongodb:27017"
+	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+	client, err := mongo.Connect(opts)
+	db := client.Database("admin").Collection("courses")
+
+	if err != nil {
+		fmt.Println("Something went wrong in the client")
+		panic(err)
+	}
+
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	day := "MW"
+	startTime := "0100"
+	endTime := "0215"
+	endTimeAMPM := "PM"
+	location := "SLC"
+	roomNum := 409
+	info := ""
+
+	concurrentProgramming := Course{
+		DeliveryMode:    "F2F",
+		CourseCategory:  "CS",
+		CourseId: 234,
+		Section: "A",
+		Crn: 10383,
+		Title: "Concurrent Programming",
+		Credits: 4,
+		Day: &day,
+		StartTime: &startTime,
+		EndTime: &endTime,
+		EndTimeAMPM: &endTimeAMPM,
+		Location: &location,
+		RoomNum: &roomNum,
+		Instructor: "Kapolka M",
+		Status: "Open",
+		Limit: 20,
+		Students: 14,
+		Waiting: 0,
+		Info: &info,
+		IsOnline: false,
+	}
+
+	result, err := db.InsertOne(
+		context.TODO(),
+		concurrentProgramming,
+	)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("%s\n", result)
+	fmt.Println("an insertion has been made into the table")
+}

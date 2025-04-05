@@ -5,69 +5,43 @@ import (
     "fmt"
 
     "go.mongodb.org/mongo-driver/v2/mongo"
-    // "go.mongodb.org/mongo-driver/v2/bson"
     "go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-// // dbinterface main
-// func dbinterface() {
-// 	// uri := "mongodb://mongodb:27017"
-// 	// serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-// 	// opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
-// 	// client, err := mongo.Connect(opts)
-// 	// db := client.Database("db")
 
-// 	// if err != nil {
-// 	// 	fmt.Println("Something went wrong in the client")
-// 	// 	panic(err)
-// 	// }
-// 	// defer func() {
-// 	// 	if err = client.Disconnect(context.TODO()); err != nil {
-// 	// 		panic(err)
-// 	// 	}
-// 	// }()
-
-
-// 	// Send a ping to confirm a successful connection
-// 	var result bson.M
-// 	command := bson.D{{"hello", 1}}
-// 	err = db.RunCommand(context.TODO(), command).Decode(&result)
-// 	if err != nil {
-// 		fmt.Println("Error running command!")
-// 		fmt.Println(err)
-// 		panic(err)
-// 		fmt.Println("Successfully panicked")
-// 	}
-// 	if err = client.Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result); err != nil {
-// 		fmt.Println("Something went wrong with pinging")
-// 		panic(err)
-// 	}
-// 	fmt.Println("Connection established with database!")
-// 	test(&db)
-// }
-
-func insertCourse(courseData course) {
-
-}
-
-func test() {
+/*
+ * Insert a course into the admin database in collection named semester
+ * Arguments:
+ *   courseData : Course struct with included course data
+ *   semester : string representation of the semester (e.g.: Sp2025, F2025, Sp1456, etc ...)
+ */
+func insertCourse(courseData Course, semester string) {
+	defer fmt.Printf("Inserted %s %d into %s\n", courseData.CourseCategory, courseData.CourseId, semester)
 	uri := "mongodb://mongodb:27017"
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
 	client, err := mongo.Connect(opts)
-	db := client.Database("db").Collection("courses")
+	db := client.Database("admin").Collection(semester)
 
 	if err != nil {
-		fmt.Println("Something went wrong in the client")
+		fmt.Println("Error connecting to Client!")
 		panic(err)
 	}
 
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
+	_, err = db.InsertOne(
+		context.TODO(),
+		courseData,
+	)
+	if err != nil {
+		panic(err)
+	}
+}
 
+/*
+ * An exmaple insertion of how to insert a course into the db
+ */
+func exampleInsertion() {
+	// Example insertion:
 	day := "MW"
 	startTime := "0100"
 	endTime := "0215"
@@ -78,52 +52,59 @@ func test() {
 
 	day1 := "T"
 	startTime1 := "0300"
-	endtime1 := "0450"
+	endTime1 := "0450"
 	endTimeAMPM1 := "PM"
-	location1 := "SLC 409"
+	location1 := "SLC"
+	roomNum1 := 409
 	info1 := ""
 
-	concurrentProgrammingChild := courseChild{
-		credits: 4.00,
-		day: &day1,
-		startTime: &startTime1,
-		endTime: &endtime1,
-		endTimeAMPM: &endTimeAMPM1,
-		location: &location1,
-		info: &info1,
+	concurrentProgrammingChild := Course{
+		DeliveryMode:    "F2F",
+		CourseCategory:  "CS",
+		CourseId: 234,
+		Section: "A",
+		Crn: 10383,
+		Title: "Concurrent Programming",
+		Credits: 4,
+		Day: &day1,
+		StartTime: &startTime1,
+		EndTime: &endTime1,
+		EndTimeAMPM: &endTimeAMPM1,
+		Location: &location1,
+		RoomNum: &roomNum1,
+		Instructor: "Kapolka M",
+		Status: "Open",
+		Limit: 20,
+		Students: 14,
+		Waiting: 0,
+		Info: &info1,
+		IsOnline: false,
 	}
 
-	concurrentProgramming := course{
-		deliveryMode:    "F2F",
-		courseCategory:  "CS",
-		courseId: 234,
-		section: "A",
-		crn: 10383,
-		title: "Concurrent Programming",
-		credits: 4,
-		day: &day,
-		startTime: &startTime,
-		endTime: &endTime,
-		endTimeAMPM: &endTimeAMPM,
-		location: &location,
-		roomNum: &roomNum,
-		instructor: "Kapolka M",
-		status: "Open",
-		limit: 20,
-		students: 14,
-		waiting: 0,
-		info: &info,
-		isOnline: false,
-		child: &concurrentProgrammingChild,
+	concurrentProgramming := Course{
+		DeliveryMode:    "F2F",
+		CourseCategory:  "CS",
+		CourseId: 234,
+		Section: "A",
+		Crn: 10383,
+		Title: "Concurrent Programming",
+		Credits: 4,
+		Day: &day,
+		StartTime: &startTime,
+		EndTime: &endTime,
+		EndTimeAMPM: &endTimeAMPM,
+		Location: &location,
+		RoomNum: &roomNum,
+		Instructor: "Kapolka M",
+		Status: "Open",
+		Limit: 20,
+		Students: 14,
+		Waiting: 0,
+		Info: &info,
+		IsOnline: false,
+		CourseChild: &concurrentProgrammingChild,
 	}
 
-	result, err := db.InsertOne(
-		context.TODO(),
-		concurrentProgramming,
-	)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("%s\n", result)
-	fmt.Println("an insertion has been made into the table")
+	// inserts concurrentPRogramming, and concurrentProgrammingChild as a child document
+	insertCourse(concurrentProgramming, "Sp2025")
 }

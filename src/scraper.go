@@ -16,38 +16,38 @@ import (
 
 Any variable that is a pointer to a type is an optional paramteter.
 */
-type course struct {
-	deliveryMode string // F2F; HYB; null etc.
-	courseCategory string // CS; MTH; ENG etc.
-	courseId int
-	section string // INA; A; B etc.
-	crn int
-	title string // Planet Earth; Composition; Calculus I etc.
-	credits float32 // 3.00; 4.00 etc.
-	day *string // MWF; TR; null etc.
-	startTime *string // 0100; 0800; 0430; null etc.
-	endTime *string // 0100; 0800; 0430; null etc.
-	endTimeAMPM *string // AM; PM; null.
-	location *string // SLC; BREIS; null etc.
-	roomNum *int // 108, 409, any number, null etc.
-	instructor string // Nye B; Simpson H; Kapolka M etc.
-	status string // Open; Nearly; Closed.
-	limit int // Limit to number of students
-	students int 
-	waiting int
-	info *string // HONORS STUDENTS ONLY; CROSS-LISTED WITH IM 350 A etc.
-	isOnline bool // This is for full online classes (OL) not SOL or HYB
-	isCourseChild bool // If this course refers to a pervious course
-	courseChild *course
+type Course struct {
+	DeliveryMode string // F2F; HYB; null etc.
+	CourseCategory string // CS; MTH; ENG etc.
+	CourseId int
+	Section string // INA; A; B etc.
+	Crn int
+	Title string // Planet Earth; Composition; Calculus I etc.
+	Credits float32 // 3.00; 4.00 etc.
+	Day *string // MWF; TR; null etc.
+	StartTime *string // 0100; 0800; 0430; null etc.
+	EndTime *string // 0100; 0800; 0430; null etc.
+	EndTimeAMPM *string // AM; PM; null.
+	Location *string // SLC; BREIS; null etc.
+	RoomNum *int // 108, 409, any number, null etc.
+	Instructor string // Nye B; Simpson H; Kapolka M etc.
+	Status string // Open; Nearly; Closed.
+	Limit int // Limit to number of students
+	Students int
+	Waiting int
+	Info *string // HONORS STUDENTS ONLY; CROSS-LISTED WITH IM 350 A etc.
+	IsOnline bool // This is for full online classes (OL) not SOL or HYB
+	IsCourseChild bool // If this course refers to a pervious course
+	CourseChild *Course
 }
 
 /* courseChild is for more time slots when courses dont always
 meet at the same time. 
 
 /* Parsing functions */
-type fieldFunc func (*course, *html.Tokenizer) error
+type fieldFunc func (*Course, *html.Tokenizer) error
 
-func courseToString(c course) string {
+func courseToString(c Course) string {
     // Helper function to safely dereference pointer strings
     safeString := func(s *string) string {
         if s == nil {
@@ -91,31 +91,31 @@ func courseToString(c course) string {
 	- Room Number: %s
 	- Online: %t
 	- Special Info: %s`,
-        c.courseId,
-        c.title,
-        c.deliveryMode,
-        c.courseCategory,
-        c.section,
-        c.crn,
-        c.credits,
-        c.instructor,
-        c.status,
-        safeString(c.day),
-        safeString(c.startTime),
-        safeString(c.endTime),
-        safeString(c.endTimeAMPM),
-        c.limit,
-        c.students,
-        c.waiting,
-        safeString(c.location),
-        safeInt(c.roomNum),
-        c.isOnline,
-        safeString(c.info))
+        c.CourseId,
+        c.Title,
+        c.DeliveryMode,
+        c.CourseCategory,
+        c.Section,
+        c.Crn,
+        c.Credits,
+        c.Instructor,
+        c.Status,
+        safeString(c.Day),
+        safeString(c.StartTime),
+        safeString(c.EndTime),
+        safeString(c.EndTimeAMPM),
+        c.Limit,
+        c.Students,
+        c.Waiting,
+        safeString(c.Location),
+        safeInt(c.RoomNum),
+        c.IsOnline,
+        safeString(c.Info))
 
-    if c.courseChild != nil {
+    if c.CourseChild != nil {
         childString := fmt.Sprintf(`
 	Additional Course Section:
-	%s`, courseToString(*c.courseChild))
+	%s`, courseToString(*c.CourseChild))
         
         description += childString
     }
@@ -123,7 +123,7 @@ func courseToString(c course) string {
     return description
 }
 
-func getDeliveryMode(c *course, tokenizer *html.Tokenizer) error {
+func getDeliveryMode(c *Course, tokenizer *html.Tokenizer) error {
 	/* getDeliveryMode gets the delivery mode from the course.
 
 	Delivery modes is how the course is offered (F2F, HYB, OL etc.)
@@ -146,13 +146,13 @@ func getDeliveryMode(c *course, tokenizer *html.Tokenizer) error {
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Delivery Mode Token found: %s\n", token.Data)
-			c.deliveryMode = token.Data
+			c.DeliveryMode = token.Data
 		}
 	}
 	return nil
 }
 
-func getCourseCategoryAndId(c *course, tokenizer *html.Tokenizer) error {
+func getCourseCategoryAndId(c *Course, tokenizer *html.Tokenizer) error {
 	/* getCourseCategoryAndId gets the course category 
 	and id of the course.
 
@@ -181,18 +181,18 @@ func getCourseCategoryAndId(c *course, tokenizer *html.Tokenizer) error {
 				return errors.New(fmt.Sprintf("Course category and id in unexpected format." + 
 									   " Got %d; Expected 2.", len(splitData)))
 			}
-			c.courseCategory = splitData[0]
+			c.CourseCategory = splitData[0]
 			courseId, err := strconv.Atoi(splitData[1])
 			if err != nil {
 				return err
 			}
-			c.courseId = courseId
+			c.CourseId = courseId
 		}
 	}
 	return nil
 }
 
-func getSection(c *course, tokenizer *html.Tokenizer) error {
+func getSection(c *Course, tokenizer *html.Tokenizer) error {
 	/* getSection gets the section from the course.
 
 	Section is the group of the Section (A, B, INA etc.)
@@ -215,13 +215,13 @@ func getSection(c *course, tokenizer *html.Tokenizer) error {
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Section Token found: %s\n", token.Data)
-			c.section = token.Data
+			c.Section = token.Data
 		}
 	}
 	return nil
 }
 
-func getCRN(c *course, tokenizer *html.Tokenizer) error {
+func getCRN(c *Course, tokenizer *html.Tokenizer) error {
 	/* getCRN gets the CRN from the course.
 
 	CRN is the course registration number (31233,23213, 0 etc.)
@@ -248,13 +248,13 @@ func getCRN(c *course, tokenizer *html.Tokenizer) error {
 			if err != nil {
 				return err
 			}
-			c.crn = parsedCRN
+			c.Crn = parsedCRN
 		}
 	}
 	return nil
 }
 
-func getTitle(c *course, tokenizer *html.Tokenizer) error {
+func getTitle(c *Course, tokenizer *html.Tokenizer) error {
 	/* getTitle gets the name from the course.
 
 	Arguments:
@@ -275,13 +275,13 @@ func getTitle(c *course, tokenizer *html.Tokenizer) error {
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Title Token found: %s\n", token.Data)
-			c.title = token.Data
+			c.Title = token.Data
 		}
 	}
 	return nil
 }
 
-func getCredits(c *course, tokenizer *html.Tokenizer) error {
+func getCredits(c *Course, tokenizer *html.Tokenizer) error {
 	/* getCredits gets the credits from the course.
 
 	Credits are floats (3.00, 4.00, 1.00, etc.)
@@ -308,13 +308,13 @@ func getCredits(c *course, tokenizer *html.Tokenizer) error {
 			if err != nil {
 				return err
 			}
-			c.credits = float32(parsedCredits)
+			c.Credits = float32(parsedCredits)
 		}
 	}
 	return nil
 }
 
-func getDay(c *course, tokenizer *html.Tokenizer) error {
+func getDay(c *Course, tokenizer *html.Tokenizer) error {
 	/* getDay gets the days given from the course.
 
 	Days are formated as TR, MWF, WF, R etc.
@@ -328,7 +328,7 @@ func getDay(c *course, tokenizer *html.Tokenizer) error {
 	*/
 
 	// Days might not exists, check to not have issues
-	if (c.deliveryMode == "OL") {
+	if (c.DeliveryMode == "OL") {
 		return nil
 	}
 	for {
@@ -341,13 +341,13 @@ func getDay(c *course, tokenizer *html.Tokenizer) error {
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Day Token found: %s\n", token.Data)
-			c.day = &token.Data 
+			c.Day = &token.Data
 		}
 	}
 	return nil
 }
 
-func getTime(c *course, tokenizer *html.Tokenizer) error {
+func getTime(c *Course, tokenizer *html.Tokenizer) error {
 	/* getTime gets the time given from the course.
 
 	Course time is formatted as such:
@@ -355,8 +355,8 @@ func getTime(c *course, tokenizer *html.Tokenizer) error {
 	
 	Course time is divided into serveral fields:
 	startTime *string // 0100; 0800; 0430; null etc.
-	endTime *string // 0100; 0800; 0430; null etc.
-	endTimeAMPM *string // AM; PM; null.
+	EndTime *string // 0100; 0800; 0430; null etc.
+	EndTimeAMPM *string // AM; PM; null.
 
 	Arguments:
 		c (*course): The course to add the delivery mode to.
@@ -383,15 +383,15 @@ func getTime(c *course, tokenizer *html.Tokenizer) error {
 
 				// Start time: XX:XX 
 				formattedStartTime := fmt.Sprintf("%s:%s",time[0:2],time[2:4]) 
-				c.startTime = &formattedStartTime
+				c.StartTime = &formattedStartTime
 
 				// End time: XX:XX 
 				formattedEndTime := fmt.Sprintf("%s:%s",time[5:7], time[7:9])
-				c.endTime = &formattedEndTime
+				c.EndTime = &formattedEndTime
 
 				// End time AMPM: AM or PM
 				amOrPm := time[9:11]
-				c.endTimeAMPM = &amOrPm
+				c.EndTimeAMPM = &amOrPm
 
 			} else {
 				return errors.New(fmt.Sprintf("Error: time was not in the right format. Got %s, Expected xxxx-xxxx[AM][PM]", token.Data))
@@ -401,7 +401,7 @@ func getTime(c *course, tokenizer *html.Tokenizer) error {
 	return nil
 }
 
-func getLocation(c *course, tokenizer *html.Tokenizer) error {
+func getLocation(c *Course, tokenizer *html.Tokenizer) error {
 	/* getLocation gets the location and the room number 
 	of the course
 
@@ -430,18 +430,18 @@ func getLocation(c *course, tokenizer *html.Tokenizer) error {
 				return errors.New(fmt.Sprintf("Course Location in unexpected format." + 
 									   " Got %d; Expected 2.", len(splitData)))
 			}
-			c.location = &splitData[0]
+			c.Location = &splitData[0]
 			roomNum, err := strconv.Atoi(splitData[1])
 			if err != nil {
 				return err
 			}
-			c.roomNum = &roomNum 
+			c.RoomNum = &roomNum
 		}
 	}
 	return nil
 }
 
-func getInstructor(c *course, tokenizer *html.Tokenizer) error {
+func getInstructor(c *Course, tokenizer *html.Tokenizer) error {
 	/* getInstructor gets the instructor from the course.
 
 	Arguments:
@@ -462,13 +462,13 @@ func getInstructor(c *course, tokenizer *html.Tokenizer) error {
 
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Instructor Token found: %s\n", token.Data)
-			c.instructor = token.Data
+			c.Instructor = token.Data
 		}
 	}
 	return nil
 }
 
-func getStatus(c *course, tokenizer *html.Tokenizer) error {
+func getStatus(c *Course, tokenizer *html.Tokenizer) error {
 	/* getStatus gets the status from the course.
 
 	Course status is how full the course is (Nearly, Closed, Open)
@@ -493,7 +493,7 @@ func getStatus(c *course, tokenizer *html.Tokenizer) error {
 		if (tokenType == html.TextToken && textTokenCount == 0) {
 
 			fmt.Printf("Status Token found: %s\n", token.Data)
-			c.status = token.Data
+			c.Status = token.Data
 			textTokenCount++
 
 		} else if (tokenType == html.TextToken && textTokenCount == 1) {
@@ -503,14 +503,14 @@ func getStatus(c *course, tokenizer *html.Tokenizer) error {
 			if err != nil {
 				return err
 			} else {
-				c.limit = limit
+				c.Limit = limit
 			}
 		}
 	}
 	return nil
 }
 
-func getStudents(c *course, tokenizer *html.Tokenizer) error {
+func getStudents(c *Course, tokenizer *html.Tokenizer) error {
 	/* getStudents gets the number of students in the course.
 
 	Arguments:
@@ -535,13 +535,13 @@ func getStudents(c *course, tokenizer *html.Tokenizer) error {
 			if err != nil {
 				return err
 			}
-			c.students = parsedStudents 
+			c.Students = parsedStudents
 		}
 	}
 	return nil
 }
 
-func getWaiting(c *course, tokenizer *html.Tokenizer) error {
+func getWaiting(c *Course, tokenizer *html.Tokenizer) error {
 	/* getStudents gets the number of students waiting in the course.
 
 	Arguments:
@@ -566,13 +566,13 @@ func getWaiting(c *course, tokenizer *html.Tokenizer) error {
 			if err != nil {
 				return err
 			}
-			c.students = parsedWaiting 
+			c.Students = parsedWaiting
 		}
 	}
 	return nil
 }
 
-func getInfo(c *course, tokenizer *html.Tokenizer) error {
+func getInfo(c *Course, tokenizer *html.Tokenizer) error {
 	/* getInfo gets info related to a previous course.
 
 	Info will look something like: HONORS STUDENTS ONLY
@@ -596,7 +596,7 @@ func getInfo(c *course, tokenizer *html.Tokenizer) error {
 		if (tokenType == html.TextToken) {
 			fmt.Printf("Info Token found: %s\n", token.Data)
 			info := token.Data
-			c.info = &info
+			c.Info = &info
 		}
 	}
 	return nil
@@ -622,7 +622,7 @@ func getColumnCount (tokenizer html.Tokenizer) (int) {
 	return columnCount	
 }
 
-func getField(c *course, fieldCount *int, tokenizer *html.Tokenizer) error {
+func getField(c *Course, fieldCount *int, tokenizer *html.Tokenizer) error {
 	/* getField gets the corresponding field in a 
 	list of field functions from the given count
 
@@ -651,7 +651,7 @@ func getField(c *course, fieldCount *int, tokenizer *html.Tokenizer) error {
 		getWaiting,
 	}
 	// Course Child functions ([getInfo] |  [6-8])
-	if (c.isCourseChild) {
+	if (c.IsCourseChild) {
 
 		columCount := getColumnCount(*tokenizer)
 		
@@ -682,7 +682,7 @@ func getField(c *course, fieldCount *int, tokenizer *html.Tokenizer) error {
 	}
 }
 
-func getCourseData (tokenizer *html.Tokenizer) (course, error) {
+func getCourseData (tokenizer *html.Tokenizer) (Course, error) {
 	/* getCourseData parses course data from the current table row.
 
 	It will break down the course into parts and get each field based
@@ -695,7 +695,7 @@ func getCourseData (tokenizer *html.Tokenizer) (course, error) {
 		course, error: the course parsed, An error that occured during parsing or nil
 	*/
 
-	c := course{}
+	c := Course{}
 	fieldCount := 0
 	fmt.Println("Getting Course Data . . .")
 	for {
@@ -716,7 +716,7 @@ func getCourseData (tokenizer *html.Tokenizer) (course, error) {
 			// pervious row
 			for _, attr := range token.Attr {
 				if (attr.Key == "colspan") {
-					c.isCourseChild = true
+					c.IsCourseChild = true
 					fmt.Println("Course Child Found")
 				}
 			}
@@ -763,7 +763,7 @@ func parseHTML(body string) {
 		Umm . . . Cheddar!
 	*/
 	tokenizer := html.NewTokenizer(strings.NewReader(body))
-	courses := []course{}
+	courses := []Course{}
 	i := -1 
 
 	// skip to tbody
@@ -794,8 +794,8 @@ func parseHTML(body string) {
 				fmt.Fprintf(os.Stderr, "%s\n", err)
 				return
 			} else {
-				if (c.isCourseChild) {
-					courses[i].courseChild = &c
+				if (c.IsCourseChild) {
+					courses[i].CourseChild = &c
 					fmt.Println(courseToString(courses[i]))
 				} else {
 					fmt.Println(courseToString(c))
