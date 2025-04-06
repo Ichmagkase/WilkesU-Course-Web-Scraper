@@ -3,11 +3,13 @@ package scraper
 import (
 	"context"
     "fmt"
+	// "net/http"
 
     "go.mongodb.org/mongo-driver/v2/mongo"
     "go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+// Query Methods
 
 /*
  * Insert a course into the admin database in collection named semester
@@ -36,6 +38,14 @@ func insertCourse(courseData Course, semester string) {
 		panic(err)
 	}
 }
+
+// /*
+//  * Establish endpoints for read operations to the database
+//  */
+// func DatabaseIntializer() {
+// 	http.HandleFunc("/sortbyday", sortbyday);
+// 	http.ListenAndServe(":8080", nil)
+// }
 
 /*
  * An exmaple insertion of how to insert a course into the db

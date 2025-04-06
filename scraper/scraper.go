@@ -858,6 +858,7 @@ func parseHTML(body string) []Course{
 					n.CourseChild = &c
 					fmt.Println(courseToString(courses[i]))
 				} else {
+					insertCourse(c, "F25")
 					fmt.Println(courseToString(c))
 					courses = append(courses, c)
 					i++

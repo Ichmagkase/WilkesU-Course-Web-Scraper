@@ -8,5 +8,6 @@ import (
 func main() {
 	fmt.Println("Main executed")
 	scraper.Scraper()
-	scraper.ExampleInsertion()
+	// scraper.ExampleInsertion()
+	// scraper.DatabaseInitializer()
 }
