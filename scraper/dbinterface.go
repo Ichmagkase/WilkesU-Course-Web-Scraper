@@ -3,11 +3,95 @@ package scraper
 import (
 	"context"
     "fmt"
-	// "net/http"
+	"net/http"
+	"sync"
 
     "go.mongodb.org/mongo-driver/v2/mongo"
     "go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
+
+func responseHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("MONGO CLIENT: (responseHandler): ")
+	fmt.Println(mongoClient)
+	// get responses
+	params := r.URL.Query()
+	semester := params["semester"][0]
+	//sortby := params["sort"]
+	//filteropts := params["filter"]
+	// Set up db connection
+	db := mongoClient.Database("admin").Collection(semester)
+
+	filter := bson.D{
+		{"instructor",
+			bson.D{
+				{"$regex", "kapolka"},
+				{"$options", "i"},
+			},
+		},
+	}
+	response, err := db.Find(context.TODO(), filter)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintf(w, "%s\n", response)
+}
+
+func testResponse(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello there!\n")
+}
+
+
+var mongoClient *mongo.Client
+
+ /*
+  * Establish endpoints for read operations to the database
+  */
+func DatabaseIntializer() {
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	fmt.Println("DatabaseInitializer()")
+	fmt.Println("Database is being initialized!")
+	go func() {
+		defer wg.Done()
+		// Run database
+		uri := "mongodb://mongodb:27017"
+		serverAPI := options.ServerAPI(options.ServerAPIVersion1)
+		opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
+		mongoClient, _ = mongo.Connect(opts)
+
+		fmt.Printf("MONGO CLIENT (DatabaseInitializer): ")
+		fmt.Println(mongoClient)
+
+		// Keep the Go compiler happy
+		var result bson.M
+		if err := mongoClient.Database("admin").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result); err != nil {
+			fmt.Println("Something went wrong with pinging")
+			panic(err)
+		}
+	}()
+
+	fmt.Println("Endpoints are being initialized!")
+	go func() {
+		defer wg.Done()
+		// Run HTTP server
+		mux := http.NewServeMux()
+		mux.HandleFunc("/filter", responseHandler)
+		mux.HandleFunc("/test", testResponse)
+		server := http.Server{
+			Addr: ":8080",
+			Handler: mux,
+		}
+		if err := server.ListenAndServe(); err != nil {
+			panic(err)
+		}
+	}()
+
+	wg.Wait()
+}
+
 
 // Query Methods
 
@@ -18,19 +102,11 @@ import (
  *   semester : string representation of the semester (e.g.: Sp2025, F2025, Sp1456, etc ...)
  */
 func insertCourse(courseData Course, semester string) {
-	defer fmt.Printf("Inserted %s %d into %s\n", courseData.CourseCategory, courseData.CourseId, semester)
-	uri := "mongodb://mongodb:27017"
-	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
-	client, err := mongo.Connect(opts)
-	db := client.Database("admin").Collection(semester)
+	fmt.Printf("MONGO CLIENT (insertCourse): ")
+	fmt.Println(mongoClient)
+	db := mongoClient.Database("admin").Collection(semester)
 
-	if err != nil {
-		fmt.Println("Error connecting to Client!")
-		panic(err)
-	}
-
-	_, err = db.InsertOne(
+	_, err := db.InsertOne(
 		context.TODO(),
 		courseData,
 	)
@@ -38,14 +114,6 @@ func insertCourse(courseData Course, semester string) {
 		panic(err)
 	}
 }
-
-// /*
-//  * Establish endpoints for read operations to the database
-//  */
-// func DatabaseIntializer() {
-// 	http.HandleFunc("/sortbyday", sortbyday);
-// 	http.ListenAndServe(":8080", nil)
-// }
 
 /*
  * An exmaple insertion of how to insert a course into the db

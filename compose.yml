@@ -12,3 +12,5 @@ services:
     container_name: scraper 
     depends_on:
       - mongodb
+    ports:
+      - "8080:8080"
