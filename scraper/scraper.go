@@ -806,7 +806,7 @@ func getHTML(link string) (string, error) {
 	return string(body), nil
 }
 
-func parseHTML(body string) {
+func parseHTML(body string) []Course{
 	/* parseHTML looks at a string of HTML, and tokenizes it using
 	Golang's html tokenizer.
 
@@ -814,7 +814,7 @@ func parseHTML(body string) {
 		body (string): The body of html to parse.
 	
 	Returns:
-		Umm . . . Cheddar!
+		([]Courses): A list of courses retrived.
 	*/
 	tokenizer := html.NewTokenizer(strings.NewReader(body))
 	courses := []Course{}
@@ -824,7 +824,7 @@ func parseHTML(body string) {
 	for {
 		tokenType := tokenizer.Next()
 		if tokenType == html.ErrorToken {
-			return
+			break
 		}
 		token := tokenizer.Token()
 		if (tokenType == html.EndTagToken) && (token.Data == "thead") {
@@ -839,7 +839,7 @@ func parseHTML(body string) {
 		if tokenType == html.ErrorToken {
 			// EOF: Done reading
 			fmt.Printf("Done.\n")
-			return
+			break
 		}
 		token := tokenizer.Token()
 		fmt.Printf("Token[%s] Type[%s]\n", token.Data, tokenType)
@@ -847,7 +847,7 @@ func parseHTML(body string) {
 			c, err := getCourseData(tokenizer)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
+				break
 			} else {
 				if (c.IsCourseChild) {
 					n := &courses[i]
@@ -865,6 +865,8 @@ func parseHTML(body string) {
 			}
 		}
 	}
+	return courses
+
 }
 
 func Scraper() {
