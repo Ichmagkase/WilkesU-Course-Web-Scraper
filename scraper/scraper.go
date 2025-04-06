@@ -10,6 +10,8 @@ import (
 	"errors"
 	"os"
 	"regexp"
+	"sync"
+	"runtime"
 )
 
 /* The course struct is what a course is expected to look like.
@@ -806,49 +808,38 @@ func getHTML(link string) (string, error) {
 	return string(body), nil
 }
 
-func parseHTML(body string) []Course{
+func parseHTML(body string, workerNum int, wg *sync.WaitGroup) []Course {
 	/* parseHTML looks at a string of HTML, and tokenizes it using
 	Golang's html tokenizer.
 
 	Arguments:
 		body (string): The body of html to parse.
+		workerNum (int): The number of this worker.
+		wg (*sync.WaitGroup): The Wait Group this worker is apart of.
 	
 	Returns:
 		([]Courses): A list of courses retrived.
 	*/
+	defer wg.Done()
 	tokenizer := html.NewTokenizer(strings.NewReader(body))
 	courses := []Course{}
 	i := -1 
-
-	// skip to tbody
-	for {
-		tokenType := tokenizer.Next()
-		if tokenType == html.ErrorToken {
-			break
-		}
-		token := tokenizer.Token()
-		if (tokenType == html.EndTagToken) && (token.Data == "thead") {
-			fmt.Println("At <tbody>, exiting . . .")
-			tokenizer.Next() // </thead> -> <tbody>
-			break
-		}
-	}
 
 	for {
 		tokenType := tokenizer.Next()
 		if tokenType == html.ErrorToken {
 			// EOF: Done reading
-			fmt.Printf("Done.\n")
+			fmt.Printf("Worker[%d]: Done.\n", workerNum)
 			break
 		}
 		token := tokenizer.Token()
-		fmt.Printf("Token[%s] Type[%s]\n", token.Data, tokenType)
+		fmt.Printf("Worker[%d]: Token[%s] Type[%s]\n", workerNum, token.Data, tokenType)
 		if (tokenType == html.StartTagToken) && (token.Data == "tr") {
 			c, err := getCourseData(tokenizer)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err)
+				fmt.Fprintf(os.Stderr, "Worker[%d]: %s\n", workerNum, err)
 				break
-			} else {
+			} else if (i != -1) {
 				if (c.IsCourseChild) {
 					n := &courses[i]
 					for (n.CourseChild != nil) {
@@ -856,18 +847,98 @@ func parseHTML(body string) []Course{
 
 					}
 					n.CourseChild = &c
-					fmt.Println(courseToString(courses[i]))
+					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(courses[i]))
 				} else {
 					insertCourse(c, "F25")
-					fmt.Println(courseToString(c))
+					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(c))
 					courses = append(courses, c)
 					i++
 				}
+			} else {
+				courses = append(courses, c)
+				i++
 			}
 		}
 	}
 	return courses
+}
 
+func skipToFirstRow(body string) (string, error) {
+	/* skipToFirstRow takes the body and finds the first row after </thead>.
+
+	Arguments:
+		body (string): The body to slice.
+
+	Returns:
+		(string, error): The sliced body, error is not nil if </thead>
+		is not found, or <tr is not found after </thead>
+	*/
+	endOfHead := "</thead>"
+	rowStart := "<tr"
+
+	i := strings.Index(body, endOfHead)
+
+	if (i == -1) {
+		return "", errors.New("</thead> not found")
+	}
+
+	fragmentBody := body[i:]
+
+	j := strings.Index(fragmentBody, rowStart)
+	
+	if (j == -1) {
+		return "", errors.New("<tr> after </thead> not found")
+	}
+	
+	return fragmentBody[j:], nil
+}
+
+func getChunks(body string) []string {
+	/* getChunks divides the body into chunks based on the value of runtime.GOMAXPROCS(0).
+
+	The chunks are also divided base on the end of rows. Thus chunks are all not the
+	same size. They are pretty close to one another, about ~1000 charatcers
+
+	Arguments:
+		body (string): The body to divide into chunks.
+
+	Returns:
+		[]string: The sliced body.
+	*/
+	rowEnd := "</tr>"
+	numChunks := runtime.GOMAXPROCS(0)
+	chunks := []string{}
+	chunkSize := len(body) / numChunks
+	fmt.Printf("Chunk Size: %d\n", chunkSize)
+	i := 0
+	chunkIndex := i + chunkSize
+
+	for {
+		// If the next chunk will be out of bounds, set the last chunk to the rest of the body.
+		// This means the last chunk will most likey always be the smallest chunk while the others
+		// are close to the wanted chunk size.
+
+		if (chunkIndex > len(body)) {
+			chunks = append(chunks, body[i:])
+			break
+		}
+		chunk := body[i:chunkIndex] // Get a chunk from the body
+		j := strings.LastIndex(chunk, rowEnd) // Find the last </tr> in this chunk
+		if (j == -1) {
+			// Set this chunk to the rest of the body
+			chunks = append(chunks, body[i:])
+			break
+		}
+
+		end := i + j + len(rowEnd)
+		chunk = body[i:end] // Get a chunk
+		chunks = append(chunks, chunk)
+
+		i = end // Skip to the first row not in the last chunk
+		chunkIndex = i + chunkSize
+	}
+
+	return chunks
 }
 
 func Scraper() {
@@ -878,5 +949,18 @@ func Scraper() {
 		panic(err)
 	}
 
-	parseHTML(body)
+	body, err = skipToFirstRow(body)
+	if err != nil {
+		panic(err)
+	}
+
+	chunks := getChunks(body)
+
+	var wg sync.WaitGroup
+	for i := range(runtime.GOMAXPROCS(0)) {
+		wg.Add(1)
+		go parseHTML(chunks[i], i, &wg)
+	}
+
+	wg.Wait()
 }
