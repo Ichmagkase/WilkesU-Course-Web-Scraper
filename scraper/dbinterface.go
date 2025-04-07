@@ -19,13 +19,14 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 	semester := params["semester"][0]
 	//sortby := params["sort"]
 	//filteropts := params["filter"]
+	instructor := params["instructor"][0]
 	// Set up db connection
 	db := mongoClient.Database("admin").Collection(semester)
 
 	filter := bson.D{
 		{"instructor",
 			bson.D{
-				{"$regex", "kapolka"},
+				{"$regex", instructor},
 				{"$options", "i"},
 			},
 		},
@@ -34,8 +35,13 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Fprintf(w, "%s\n", response)
+	var results []Course
+	if err = response.All(context.TODO(), &results); err != nil {
+		panic(err)
+	}
+	for i := 0; i < len(results); i++ {
+		fmt.Fprintf(w, "%s\n", results[i].Title)
+	}
 }
 
 func testResponse(w http.ResponseWriter, r *http.Request) {
