@@ -43,9 +43,6 @@ type Course struct {
 	CourseChild *Course
 }
 
-/* courseChild is for more time slots when courses dont always
-meet at the same time. 
-
 /* Parsing functions */
 type fieldFunc func (*Course, *html.Tokenizer, *int, html.Token) error
 
@@ -767,9 +764,8 @@ func getCourseData (tokenizer *html.Tokenizer) (Course, error) {
 		fmt.Printf("In Course: Token[%s] Type[%s] fieldCount[%d]\n", token.Data, tokenType, fieldCount)
 
 		if (tokenType == html.StartTagToken) && (token.Data == "td") {
-			// Check if <td> has attribute 'colspan' and 6
-			// If so, then this row is extra info for the
-			// pervious row
+			// Check if <td> has attribute 'colspan' and the value of it is 6
+			// If so, then this row is course child
 			for _, attr := range token.Attr {
 				if (attr.Key == "colspan" && fieldCount == 0) {
 					c.IsCourseChild = true
