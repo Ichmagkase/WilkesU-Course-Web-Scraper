@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"sync"
 	"runtime"
+	"context"
 )
 
 /* The course struct is what a course is expected to look like.
@@ -804,61 +805,83 @@ func getHTML(link string) (string, error) {
 	return string(body), nil
 }
 
-func parseHTML(body string, workerNum int, wg *sync.WaitGroup) []Course {
-	/* parseHTML looks at a string of HTML, and tokenizes it using
-	Golang's html tokenizer.
+func parseHTML(body string, workerNum int, wg *sync.WaitGroup, verifyChunk chan<- bool, ctx context.Context) []Course {
+	/* parseHTML looks at a string of HTML, and tokenizes it using Golang's html tokenizer.
 
 	Arguments:
 		body (string): The body of html to parse.
 		workerNum (int): The number of this worker.
 		wg (*sync.WaitGroup): The Wait Group this worker is apart of.
-	
+		verifyChunk (chan<- bool): A channel to send verification if this is a good chunk.
+		ctx (context.Context): A context that will ensure we stop doing work if an error occurs
+
 	Returns:
-		([]Courses): A list of courses retrived.
+		[]Courses: A list of courses retrived.
 	*/
 	defer wg.Done()
 	tokenizer := html.NewTokenizer(strings.NewReader(body))
 	courses := []Course{}
-	i := -1 
+	i := -1
 
 	for {
-		tokenType := tokenizer.Next()
-		if tokenType == html.ErrorToken {
-			// EOF: Done reading
-			fmt.Printf("Worker[%d]: Done.\n", workerNum)
-			break
-		}
-		token := tokenizer.Token()
-		fmt.Printf("Worker[%d]: Token[%s] Type[%s]\n", workerNum, token.Data, tokenType)
-		if (tokenType == html.StartTagToken) && (token.Data == "tr") {
+		select {
+		// Check the context to make sure we dont do extra work
+		case <-ctx.Done():
+			return []Course{}
+		default:
+			tokenType := tokenizer.Next()
+			if (tokenType == html.ErrorToken) {
+				// EOF: Done reading
+				fmt.Printf("Worker[%d]: Done.\n", workerNum)
+				return courses
+			}
+			token := tokenizer.Token()
+			fmt.Printf("Worker[%d]: Token[%s] Type[%s]\n", workerNum, token.Data, tokenType)
+
+			if !(tokenType == html.StartTagToken && token.Data == "tr") {
+				continue
+			}
+
 			c, err := getCourseData(tokenizer)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Worker[%d]: %s\n", workerNum, err)
-				break
-			} else if (i != -1) {
-				if (c.IsCourseChild) {
-					n := &courses[i]
-					for (n.CourseChild != nil) {
-						n = n.CourseChild
+				return []Course{}
+			}
 
-					}
-					n.CourseChild = &c
-					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(courses[i]))
+			// If we havent found a course yet, check if the first course is a child.
+			// If it is, then we have a bad chunk.
+			if i == -1 {
+				if c.IsCourseChild {
+					// Bad Chunk
+					verifyChunk <- false
 				} else {
+					// Good Chunk
+					verifyChunk <- true
 					insertCourse(c, "F25")
 					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(c))
 					courses = append(courses, c)
 					i++
 				}
 			} else {
-				courses = append(courses, c)
-				i++
+				if c.IsCourseChild {
+					n := &courses[i]
+					for n.CourseChild != nil {
+						n = n.CourseChild
+					}
+					n.CourseChild = &c
+					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(courses[i]))
+					insertCourse(courses[i], "F25")
+				} else {
+					insertCourse(c, "F25")
+					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(c))
+					courses = append(courses, c)
+					i++
+				}
 			}
 		}
 	}
 	return courses
 }
-
 func skipToFirstRow(body string) (string, error) {
 	/* skipToFirstRow takes the body and finds the first row after </thead>.
 
@@ -889,7 +912,7 @@ func skipToFirstRow(body string) (string, error) {
 	return fragmentBody[j:], nil
 }
 
-func getChunks(body string) []string {
+func getChunks(body string, numChunks int, shifts int) ([]string, error) {
 	/* getChunks divides the body into chunks based on the value of runtime.GOMAXPROCS(0).
 
 	The chunks are also divided base on the end of rows. Thus chunks are all not the
@@ -897,12 +920,13 @@ func getChunks(body string) []string {
 
 	Arguments:
 		body (string): The body to divide into chunks.
-
+		numChunks (int): The number of chunks to divide the body into.
+		shifts (int): The number of left row shifts to apply. Mainly used to handle
+				 related row spliting.
 	Returns:
-		[]string: The sliced body.
+		([]string, error): The sliced body. Error is not nil if an error occurs during chunking.
 	*/
 	rowEnd := "</tr>"
-	numChunks := runtime.GOMAXPROCS(0)
 	chunks := []string{}
 	chunkSize := len(body) / numChunks
 	fmt.Printf("Chunk Size: %d\n", chunkSize)
@@ -920,10 +944,20 @@ func getChunks(body string) []string {
 		}
 		chunk := body[i:chunkIndex] // Get a chunk from the body
 		j := strings.LastIndex(chunk, rowEnd) // Find the last </tr> in this chunk
+
 		if (j == -1) {
 			// Set this chunk to the rest of the body
 			chunks = append(chunks, body[i:])
 			break
+		}
+	
+		// Apply row left shift by finding a </tr> before index j
+		leftShifts := 0
+		for (leftShifts < shifts) {
+			j = strings.LastIndex(chunk[0:j], rowEnd)
+			if (j == -1) {
+				return []string{}, errors.New(fmt.Sprintf("Too little rows in chunk, failed to shift up by %d rows", shifts))
+			}
 		}
 
 		end := i + j + len(rowEnd)
@@ -934,7 +968,7 @@ func getChunks(body string) []string {
 		chunkIndex = i + chunkSize
 	}
 
-	return chunks
+	return chunks, nil
 }
 
 func Scraper() {
@@ -950,13 +984,54 @@ func Scraper() {
 		panic(err)
 	}
 
-	chunks := getChunks(body)
+	workerNum := runtime.GOMAXPROCS(0)
+	shifts := 0
 
-	var wg sync.WaitGroup
-	for i := range(runtime.GOMAXPROCS(0)) {
-		wg.Add(1)
-		go parseHTML(chunks[i], i, &wg)
+	for {
+		ctx, cancel := context.WithCancel(context.Background())
+
+		// Get chunks of the body
+		chunks, err := getChunks(body, workerNum, shifts)
+		if (err != nil) {
+			panic(err)
+		}
+
+		verifyChan := make(chan bool, workerNum)
+
+		var wg sync.WaitGroup
+		
+		// Spawn workers
+		for i := range(workerNum) {
+			wg.Add(1)
+			go parseHTML(chunks[i], i, &wg, verifyChan, ctx)
+		}
+
+		// Wait for each worker to determine if there chunk is good or bad.
+		// If we find out a chunk is bad, redo the chunks
+		goodChunks := 0
+		badChunkFound := false
+		for res := range verifyChan {
+			if (!res) {
+				cancel()
+				badChunkFound = true
+				break
+			}
+			goodChunks++
+			if (goodChunks == workerNum) {
+				close(verifyChan)
+			}
+		}
+
+		// If a bad chunk is found, increase the shift and try again
+		if (badChunkFound) {
+
+			shifts++
+
+		} else {
+
+			wg.Wait()
+			break
+
+		}
 	}
-
-	wg.Wait()
 }
