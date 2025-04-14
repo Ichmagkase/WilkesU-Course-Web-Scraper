@@ -805,7 +805,7 @@ func getHTML(link string) (string, error) {
 	return string(body), nil
 }
 
-func parseHTML(body string, workerNum int, wg *sync.WaitGroup, verifyChunk chan<- bool, ctx context.Context) []Course {
+func parseHTML(body string, workerNum int, wg *sync.WaitGroup, verifyChunk chan<- bool, dbChan chan<- Course, ctx context.Context) []Course {
 	/* parseHTML looks at a string of HTML, and tokenizes it using Golang's html tokenizer.
 
 	Arguments:
@@ -813,6 +813,7 @@ func parseHTML(body string, workerNum int, wg *sync.WaitGroup, verifyChunk chan<
 		workerNum (int): The number of this worker.
 		wg (*sync.WaitGroup): The Wait Group this worker is apart of.
 		verifyChunk (chan<- bool): A channel to send verification if this is a good chunk.
+		dbChan (chan<- Courses): Courses will be put on this channel.
 		ctx (context.Context): A context that will ensure we stop doing work if an error occurs
 
 	Returns:
@@ -857,22 +858,40 @@ func parseHTML(body string, workerNum int, wg *sync.WaitGroup, verifyChunk chan<
 				} else {
 					// Good Chunk
 					verifyChunk <- true
-					insertCourse(c, "F25")
+					select {
+					case <-ctx.Done():
+						return []Course{}
+					default:
+						dbChan <- c
+					}
 					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(c))
 					courses = append(courses, c)
 					i++
 				}
 			} else {
 				if c.IsCourseChild {
+					// Add child to the pervious course
 					n := &courses[i]
 					for n.CourseChild != nil {
 						n = n.CourseChild
 					}
 					n.CourseChild = &c
 					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(courses[i]))
-					insertCourse(courses[i], "F25")
+
+					select {
+					case <-ctx.Done():
+						return []Course{}
+					default:
+						dbChan <- c
+					}
 				} else {
-					insertCourse(c, "F25")
+					select {
+					case <-ctx.Done():
+						return []Course{}
+					default:
+						dbChan <- c
+					}
+
 					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(c))
 					courses = append(courses, c)
 					i++
@@ -913,7 +932,7 @@ func skipToFirstRow(body string) (string, error) {
 }
 
 func getChunks(body string, numChunks int, shifts int) ([]string, error) {
-	/* getChunks divides the body into chunks based on the value of runtime.GOMAXPROCS(0).
+	/* getChunks divides the body into chunks based on the value of numChunks.
 
 	The chunks are also divided base on the end of rows. Thus chunks are all not the
 	same size. They are pretty close to one another, about ~1000 charatcers
@@ -958,6 +977,7 @@ func getChunks(body string, numChunks int, shifts int) ([]string, error) {
 			if (j == -1) {
 				return []string{}, errors.New(fmt.Sprintf("Too little rows in chunk, failed to shift up by %d rows", shifts))
 			}
+			leftShifts++
 		}
 
 		end := i + j + len(rowEnd)
@@ -969,6 +989,22 @@ func getChunks(body string, numChunks int, shifts int) ([]string, error) {
 	}
 
 	return chunks, nil
+}
+
+func inserter(coursesIn <-chan Course, wg *sync.WaitGroup) {
+	/* inserters put a course into the database.
+
+	Arguments:
+		coursesIn (<-chan Course): Courses sent from the parsers to put into the database.
+		wg (*sync.WaitGroup): The waitgroup the inserter is apart of.
+	*/
+
+	defer wg.Done()
+
+	for c := range coursesIn {
+		insertCourse(c, "F25")
+		fmt.Println("Inserter put a course in a database")
+	}	
 }
 
 func Scraper() {
@@ -985,25 +1021,38 @@ func Scraper() {
 	}
 
 	workerNum := runtime.GOMAXPROCS(0)
+
+	// 3 inserters, the rest are parsers
+	inserters := 3 
+	parsers := workerNum - inserters
+
 	shifts := 0
+	sendDB := make(chan Course, parsers)
+	var insertersWg sync.WaitGroup
+
+	// Create inserters
+	for _ = range(inserters) {
+		insertersWg.Add(1)
+		go inserter(sendDB, &insertersWg)
+	}
 
 	for {
 		ctx, cancel := context.WithCancel(context.Background())
 
 		// Get chunks of the body
-		chunks, err := getChunks(body, workerNum, shifts)
+		chunks, err := getChunks(body, parsers, shifts)
 		if (err != nil) {
 			panic(err)
 		}
 
-		verifyChan := make(chan bool, workerNum)
+		verifyChan := make(chan bool, parsers)
 
-		var wg sync.WaitGroup
+		var parsersWg sync.WaitGroup
 		
 		// Spawn workers
-		for i := range(workerNum) {
-			wg.Add(1)
-			go parseHTML(chunks[i], i, &wg, verifyChan, ctx)
+		for i := range(parsers) {
+			parsersWg.Add(1)
+			go parseHTML(chunks[i], i, &parsersWg, verifyChan, sendDB, ctx)
 		}
 
 		// Wait for each worker to determine if there chunk is good or bad.
@@ -1013,11 +1062,13 @@ func Scraper() {
 		for res := range verifyChan {
 			if (!res) {
 				cancel()
+				// Wait for the parsers to finish
+				parsersWg.Wait()
 				badChunkFound = true
 				break
 			}
 			goodChunks++
-			if (goodChunks == workerNum) {
+			if (goodChunks == parsers) {
 				close(verifyChan)
 			}
 		}
@@ -1029,9 +1080,15 @@ func Scraper() {
 
 		} else {
 
-			wg.Wait()
+			parsersWg.Wait()
 			break
 
 		}
 	}
+
+	// The parsers are done, so close the channel
+	close(sendDB)
+	insertersWg.Wait()
+
+	fmt.Println("Done Scraping.")
 }
