@@ -13,6 +13,7 @@ import (
 	"sync"
 	"runtime"
 	"context"
+	"sync/atomic"
 )
 
 /* The course struct is what a course is expected to look like.
@@ -705,15 +706,24 @@ func getField(c *Course, fieldCount *int, tokenizer *html.Tokenizer, startToken 
 		tokenizer.Next() // </td> -> <td>
 		token := tokenizer.Token()
 		hasColspan := false
+		colspanVal := 0
 		for _, attr := range token.Attr {
 			if (attr.Key == "colspan") {
 				hasColspan = true
+				colspanVal, _ = strconv.Atoi(attr.Val)
 				break
 			}
 		}
-		if (hasColspan) {
+		/* For the case of rows that appear as:
+		 * <tr><td colspan=6></td><td colspan=7></td></tr> 
+		 */
+		if (hasColspan && colspanVal == 7) {
 			fmt.Printf("Course Child is extra info\n")
 			err = getInfo(c, tokenizer, fieldCount, startToken)
+
+		/* For the case of rows that appear as:
+		 * <tr><td colspan=6></td><td>Some Data</td><td>Some Data</td><td>Some Data</td></tr> 
+		 */
 		} else {
 			fmt.Printf("Course Child is extra time\n")
 			err = getDay(c, tokenizer, fieldCount, startToken)
@@ -831,11 +841,23 @@ func parseHTML(body string, workerNum int, wg *sync.WaitGroup, verifyChunk chan<
 			return []Course{}
 		default:
 			tokenType := tokenizer.Next()
+
 			if (tokenType == html.ErrorToken) {
-				// EOF: Done reading
+
+				// EOF: Add the last course to the DB
+				select {
+				case <-ctx.Done():
+					return []Course{}
+				default:
+					// Send the last course to the DB
+					dbChan <- courses[i] 
+				}
+				fmt.Printf("Worker[%d]: Sent final course to DB: %s\n", workerNum, courseToString(courses[i]))
 				fmt.Printf("Worker[%d]: Done.\n", workerNum)
 				return courses
+
 			}
+
 			token := tokenizer.Token()
 			fmt.Printf("Worker[%d]: Token[%s] Type[%s]\n", workerNum, token.Data, tokenType)
 
@@ -858,13 +880,6 @@ func parseHTML(body string, workerNum int, wg *sync.WaitGroup, verifyChunk chan<
 				} else {
 					// Good Chunk
 					verifyChunk <- true
-					select {
-					case <-ctx.Done():
-						return []Course{}
-					default:
-						dbChan <- c
-					}
-					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(c))
 					courses = append(courses, c)
 					i++
 				}
@@ -877,28 +892,23 @@ func parseHTML(body string, workerNum int, wg *sync.WaitGroup, verifyChunk chan<
 					}
 					n.CourseChild = &c
 					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(courses[i]))
-
-					select {
-					case <-ctx.Done():
-						return []Course{}
-					default:
-						dbChan <- c
-					}
 				} else {
 					select {
 					case <-ctx.Done():
 						return []Course{}
 					default:
-						dbChan <- c
+						// Send the pervious course to the DB because it has no more children
+						dbChan <- courses[i] 
 					}
 
-					fmt.Printf("Worker[%d]: %s\n", workerNum, courseToString(c))
+					fmt.Printf("Worker[%d]: Sent course to DB: %s\n", workerNum, courseToString(courses[i]))
 					courses = append(courses, c)
 					i++
 				}
 			}
 		}
 	}
+
 	return courses
 }
 func skipToFirstRow(body string) (string, error) {
@@ -992,7 +1002,7 @@ func getChunks(body string, numChunks int, shifts int) ([]string, error) {
 }
 
 var m sync.Mutex
-var count int = 0
+var count int32 = 0
 func inserter(coursesIn <-chan Course, group string, wg *sync.WaitGroup) {
 	/* inserters put a course into the database.
 
@@ -1004,10 +1014,8 @@ func inserter(coursesIn <-chan Course, group string, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 	for c := range coursesIn {
-		m.Lock()
-		count++
-		m.Unlock()
-		insertCourse(c, "F25")
+		atomic.AddInt32(&count, 1)
+		insertCourse(c, group)
 		fmt.Println("Inserter put a course in a database")
 	}	
 }
@@ -1059,11 +1067,9 @@ func Scraper() {
 		panic(err)
 	}
 
-	workerNum := runtime.GOMAXPROCS(0)
-
 	// 3 inserters, the rest are parsers
-	inserters := 3 
-	parsers := workerNum - inserters
+	inserters := 3
+	parsers := runtime.GOMAXPROCS(0) - inserters 
 
 	shifts := 0
 	sendDB := make(chan Course, parsers)
@@ -1080,9 +1086,11 @@ func Scraper() {
 		ctx, cancel := context.WithCancel(context.Background())
 
 		// Get chunks of the body
-		chunks, err := getChunks(body, parsers, shifts)
-		if (err != nil) {
+		chunks, err := getChunks(body, parsers - 1, shifts)
+		if err != nil {
 			panic(err)
+		} else if len(chunks) != parsers {
+			panic(errors.New(fmt.Sprintf("error: chunks do not match requested parsers. chunks: %d, parsers: %d",len(chunks), parsers)))
 		}
 
 		verifyChan := make(chan bool, parsers)
@@ -1130,6 +1138,5 @@ func Scraper() {
 	close(sendDB)
 	insertersWg.Wait()
 
-	fmt.Println("Done Scraping.")
-	fmt.Println(count)
+	fmt.Printf("Done Scraping. Parsed %d Courses from %s%s\n", count, semester, year)
 }
