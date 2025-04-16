@@ -1,7 +1,8 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
+	"os"
 	"sync"
 	"wilkesu-scrapy/scraper"
 )
@@ -16,6 +17,7 @@ func main() {
 		scraper.DatabaseIntializer()
 	}()
 
+	os.Args = []string{"F","25"}
 	scraper.Scraper()
 	wg.Wait()
 	// scraper.ExampleInsertion()

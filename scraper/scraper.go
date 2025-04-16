@@ -991,26 +991,65 @@ func getChunks(body string, numChunks int, shifts int) ([]string, error) {
 	return chunks, nil
 }
 
-func inserter(coursesIn <-chan Course, wg *sync.WaitGroup) {
+var m sync.Mutex
+var count int = 0
+func inserter(coursesIn <-chan Course, group string, wg *sync.WaitGroup) {
 	/* inserters put a course into the database.
 
 	Arguments:
 		coursesIn (<-chan Course): Courses sent from the parsers to put into the database.
+		group (string): The group that this course is apart of.
 		wg (*sync.WaitGroup): The waitgroup the inserter is apart of.
 	*/
 
 	defer wg.Done()
-
 	for c := range coursesIn {
+		m.Lock()
+		count++
+		m.Unlock()
 		insertCourse(c, "F25")
 		fmt.Println("Inserter put a course in a database")
 	}	
 }
 
 func Scraper() {
+	/* Scraper takes 2 command line arguments, and parses the
+	The Wilkes Univeristy's Course Registar pages.
+
+	usage: scraper [F | Sp] year
+	*/
+
 	fmt.Println("Scraper service started")
 
-	body, err := getHTML("https://rosters.wilkes.edu/scheds/coursesF25.html")
+	// Get args
+	args := os.Args
+
+	if (len(args) != 2) {
+		panic(errors.New("usage: scraper semester year"))
+	}
+
+	semester := args[0]
+	year := args[1]
+
+	// Verify the semester
+	possibleSemesters := []string{"F","Sp"}
+	found := false
+	for i := range(possibleSemesters) {
+		if (semester == possibleSemesters[i]) {
+			found = true
+		}
+	}
+	if !(found) {
+		panic(errors.New(fmt.Sprintf("error: bad semester, Got %s", semester)))
+	}
+
+	// Verify the year
+	yearInt, err := strconv.Atoi(year)
+	if err != nil {
+		panic(errors.New(fmt.Sprintf("error: bad year, Got %s", year)))
+	}
+
+	body, err := getHTML(fmt.Sprintf("https://rosters.wilkes.edu/scheds/courses%s%d.html", semester, yearInt))
 	if err != nil {
 		panic(err)
 	}
@@ -1028,12 +1067,13 @@ func Scraper() {
 
 	shifts := 0
 	sendDB := make(chan Course, parsers)
+	group := semester + year
 	var insertersWg sync.WaitGroup
 
 	// Create inserters
 	for _ = range(inserters) {
 		insertersWg.Add(1)
-		go inserter(sendDB, &insertersWg)
+		go inserter(sendDB, group, &insertersWg)
 	}
 
 	for {
@@ -1091,4 +1131,5 @@ func Scraper() {
 	insertersWg.Wait()
 
 	fmt.Println("Done Scraping.")
+	fmt.Println(count)
 }
