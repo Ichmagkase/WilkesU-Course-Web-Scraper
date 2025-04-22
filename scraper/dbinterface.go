@@ -20,31 +20,47 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	semester := params["semester"][0]
 	// sortby := params["sort"][0]
-	deliveryMode := params["dm"][0]
-	// category := params["category"][0]
-	// section := params["section"][0]
-	// credits := params["credits"][0]
-	// location := params["loc"][0]
-	instructor := params["instructor"][0]
-	// status := params["status"][0]
+	deliverymode := params["deliverymode"]
+	category := params["category"]
+	credits := params["credits"]
+	location := params["location"]
+	instructor := params["instructor"]
+	status := params["status"]
+
+	filterOpts := []string{
+		"deliverymode",
+		"category",
+		"credits",
+		"location",
+		"instructor",
+		"status",
+	}
+
+	receivedParams := [][]string {
+		deliverymode,
+		category,
+		credits,
+		location,
+		instructor,
+		status,
+	}
+
+	filter := bson.D{}
+	for i, _  := range receivedParams {
+		if len(receivedParams[i]) > 0 {
+			filter = append(filter, bson.E{
+				filterOpts[i],
+					bson.D{
+						{"$regex", receivedParams[i][0]},
+						{"$options", "i"},
+					},
+			})
+		}
+	}
 
 	// Set up db connection
 	db := mongoClient.Database("admin").Collection(semester)
 
-	filter := bson.D{
-		{"instructor",
-			bson.D{
-				{"$regex", instructor},
-				{"$options", "i"},
-			},
-		},
-		{"dm",
-			bson.D{
-				{"$regex", deliveryMode},
-				{"$options", "i"},
-			},
-		},
-	}
 	response, err := db.Find(context.TODO(), filter)
 	if err != nil {
 		panic(err)
@@ -55,7 +71,7 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	for i := 0; i < len(results); i++ {
-		fmt.Fprintf(w, "%s\n", results[i].Title)
+		fmt.Fprintf(w, "%s %s\n", results[i].Title, results[i].Instructor)
 	}
 }
 
@@ -129,5 +145,6 @@ func insertCourse(courseData Course, semester string) {
 	)
 	if err != nil {
 		panic(err)
+
 	}
 }
