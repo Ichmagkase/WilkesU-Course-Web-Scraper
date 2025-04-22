@@ -5,6 +5,7 @@ import (
     "fmt"
 	"net/http"
 	"sync"
+	"strconv"
 
     "go.mongodb.org/mongo-driver/v2/mongo"
     "go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -19,18 +20,17 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 	// get responses
 	params := r.URL.Query()
 	semester := params["semester"][0]
-	// sortby := params["sort"][0]
 	deliverymode := params["deliverymode"]
 	category := params["category"]
 	credits := params["credits"]
 	location := params["location"]
 	instructor := params["instructor"]
 	status := params["status"]
+	crn := params["crn"]
 
 	filterOpts := []string{
 		"deliverymode",
-		"category",
-		"credits",
+		"coursecategory",
 		"location",
 		"instructor",
 		"status",
@@ -39,7 +39,6 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 	receivedParams := [][]string {
 		deliverymode,
 		category,
-		credits,
 		location,
 		instructor,
 		status,
@@ -50,12 +49,26 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 		if len(receivedParams[i]) > 0 {
 			filter = append(filter, bson.E{
 				filterOpts[i],
-					bson.D{
-						{"$regex", receivedParams[i][0]},
-						{"$options", "i"},
-					},
+				bson.D{
+					{"$regex", receivedParams[i][0]},
+					{"$options", "i"},
+				},
 			})
 		}
+	}
+
+	if len(credits) > 0 {
+		creditsint, _ := strconv.Atoi(credits[0])
+		filter = append(filter, bson.E{
+			"credits", creditsint,
+		})
+	}
+
+	if len(crn) > 0 {
+		crnint, _ := strconv.Atoi(crn[0])
+		filter = append(filter, bson.E{
+			"crn", crnint,
+		})
 	}
 
 	// Set up db connection
