@@ -18,8 +18,9 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	semester := params["semester"][0]
 	//sortby := params["sort"]
-	//filteropts := params["filter"]
+	filteropts := params["filter"]
 	instructor := params["instructor"][0]
+	fmt.Fprintf(w, "%s\n", filteropts)
 	// Set up db connection
 	db := mongoClient.Database("admin").Collection(semester)
 
@@ -35,6 +36,7 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
 	var results []Course
 	if err = response.All(context.TODO(), &results); err != nil {
 		panic(err)
