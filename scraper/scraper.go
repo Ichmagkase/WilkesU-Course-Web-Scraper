@@ -13,6 +13,7 @@ import (
 	"sync"
 	"context"
 	"sync/atomic"
+	"runtime/trace"
 )
 
 /* The course struct is what a course is expected to look like.
@@ -1065,6 +1066,17 @@ func Scraper() {
 	if err != nil {
 		panic(err)
 	}
+
+	f, err := os.Create("trace.out")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	err = trace.Start(f)
+	if err != nil {
+		panic(err)
+	}
+	defer trace.Stop()
 
 	// 3 inserters, the rest are parsers
 	inserters := 3
