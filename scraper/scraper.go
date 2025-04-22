@@ -11,7 +11,6 @@ import (
 	"os"
 	"regexp"
 	"sync"
-	"runtime"
 	"context"
 	"sync/atomic"
 )
@@ -1069,7 +1068,7 @@ func Scraper() {
 
 	// 3 inserters, the rest are parsers
 	inserters := 3
-	parsers := runtime.GOMAXPROCS(0) - inserters 
+	parsers := 10 
 
 	shifts := 0
 	sendDB := make(chan Course, parsers)
