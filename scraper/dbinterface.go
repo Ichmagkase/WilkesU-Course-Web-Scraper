@@ -11,16 +11,23 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
+var mongoClient *mongo.Client
+
 func responseHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("MONGO CLIENT: (responseHandler): ")
 	fmt.Println(mongoClient)
 	// get responses
 	params := r.URL.Query()
 	semester := params["semester"][0]
-	//sortby := params["sort"]
-	filteropts := params["filter"]
+	// sortby := params["sort"][0]
+	deliveryMode := params["dm"][0]
+	// category := params["category"][0]
+	// section := params["section"][0]
+	// credits := params["credits"][0]
+	// location := params["loc"][0]
 	instructor := params["instructor"][0]
-	fmt.Fprintf(w, "%s\n", filteropts)
+	// status := params["status"][0]
+
 	// Set up db connection
 	db := mongoClient.Database("admin").Collection(semester)
 
@@ -28,6 +35,12 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 		{"instructor",
 			bson.D{
 				{"$regex", instructor},
+				{"$options", "i"},
+			},
+		},
+		{"dm",
+			bson.D{
+				{"$regex", deliveryMode},
 				{"$options", "i"},
 			},
 		},
@@ -49,9 +62,6 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello there!\n")
 }
-
-
-var mongoClient *mongo.Client
 
  /*
   * Establish endpoints for read operations to the database
@@ -100,7 +110,6 @@ func DatabaseIntializer() {
 	wg.Wait()
 }
 
-
 // Query Methods
 
 /*
@@ -121,76 +130,4 @@ func insertCourse(courseData Course, semester string) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-/*
- * An exmaple insertion of how to insert a course into the db
- */
-func ExampleInsertion() {
-	// Example insertion:
-	day := "MW"
-	startTime := "0100"
-	endTime := "0215"
-	endTimeAMPM := "PM"
-	location := "SLC"
-	roomNum := 409
-	info := ""
-
-	day1 := "T"
-	startTime1 := "0300"
-	endTime1 := "0450"
-	endTimeAMPM1 := "PM"
-	location1 := "SLC"
-	roomNum1 := 409
-	info1 := ""
-
-	concurrentProgrammingChild := Course{
-		DeliveryMode:    "F2F",
-		CourseCategory:  "CS",
-		CourseId: 234,
-		Section: "A",
-		Crn: 10383,
-		Title: "Concurrent Programming",
-		Credits: 4,
-		Day: &day1,
-		StartTime: &startTime1,
-		EndTime: &endTime1,
-		EndTimeAMPM: &endTimeAMPM1,
-		Location: &location1,
-		RoomNum: &roomNum1,
-		Instructor: "Kapolka M",
-		Status: "Open",
-		Limit: 20,
-		Students: 14,
-		Waiting: 0,
-		Info: &info1,
-		IsOnline: false,
-	}
-
-	concurrentProgramming := Course{
-		DeliveryMode:    "F2F",
-		CourseCategory:  "CS",
-		CourseId: 234,
-		Section: "A",
-		Crn: 10383,
-		Title: "Concurrent Programming",
-		Credits: 4,
-		Day: &day,
-		StartTime: &startTime,
-		EndTime: &endTime,
-		EndTimeAMPM: &endTimeAMPM,
-		Location: &location,
-		RoomNum: &roomNum,
-		Instructor: "Kapolka M",
-		Status: "Open",
-		Limit: 20,
-		Students: 14,
-		Waiting: 0,
-		Info: &info,
-		IsOnline: false,
-		CourseChild: &concurrentProgrammingChild,
-	}
-
-	// inserts concurrentPRogramming, and concurrentProgrammingChild as a child document
-	insertCourse(concurrentProgramming, "Sp2025")
 }
