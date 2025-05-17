@@ -1,0 +1,53 @@
+.main {
+    background-color: #FFFFFF;
+    border: 2px #000000 solid;
+    border-radius: 10px;
+}
+.header {
+    margin: 0;
+    margin-top: 0.5em;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding-left: 0.8em;
+}
+.title, .credits, .extra_info, .time{
+    margin: 0;
+    padding-left: 1em;
+}
+.bottom_bar {
+    display: flex;
+    text-wrap: nowrap;
+    padding: 1em;
+    padding-bottom: 0.2em;
+    padding-top: 0.2em;
+    align-items: center;
+}
+.padding {
+    width: 100%;
+}
+.card_button {
+    height: 2.5em;
+    width: 15em;
+    color: #FFFFFF;
+    background-color: #002855;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+.crn {
+    display: flex;
+}
+.crn > img {
+    cursor: pointer;
+    margin-left: 0.5em;
+}
+.crn > p {
+    padding: 0;
+    margin: 0;
+}
+.students {
+    margin-right: 0.5em;
+}
+.students > p {
+    font-weight: bold
+}
