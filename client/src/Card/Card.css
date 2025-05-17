@@ -2,6 +2,8 @@
     background-color: #FFFFFF;
     border: 2px #000000 solid;
     border-radius: 10px;
+    max-width: 400px;
+    max-height: 229px;
 }
 .header {
     margin: 0;
@@ -10,7 +12,7 @@
     font-weight: bold;
     padding-left: 0.8em;
 }
-.title, .credits, .extra_info, .time{
+.title, .credits, .extra_info, .time {
     margin: 0;
     padding-left: 1em;
 }
@@ -49,4 +51,7 @@
 }
 .students > p {
     font-weight: bold
+}
+.card_button {
+    max-width: 15%;
 }

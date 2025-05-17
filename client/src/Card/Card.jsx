@@ -3,7 +3,7 @@ import copy from "../assets/copy-link-icon.svg"
 
 function Card({header = "Header", title = "Title", extra_info = "Extra Info", 
               time = "MWF 9 - 9:50AM SLC 101", crn = "00000", 
-              credits = 3.00, students = 1, limit = 1}) {
+              credits = 3.00, students = 0, limit = 1}) {
 
   let message = "Add"
   const buttonStyles = {
@@ -37,7 +37,7 @@ function Card({header = "Header", title = "Title", extra_info = "Extra Info",
             <p> {students} / {limit}</p>
           </div>
           <button className="card_button" id="card_button" style={buttonStyles}>{message}</button>
-        </div>
+          </div>
       </div>
     </>
   )
