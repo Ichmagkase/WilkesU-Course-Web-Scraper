@@ -14,3 +14,12 @@ services:
       - mongodb
     ports:
       - "8080:8080"
+
+  client:
+    build:
+      context: ./client/
+    container_name: client
+    depends_on:
+      - scraper
+    ports:
+      - "5173:80"
