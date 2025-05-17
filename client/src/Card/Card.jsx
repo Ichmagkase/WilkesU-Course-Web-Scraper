@@ -3,7 +3,22 @@ import copy from "../assets/copy-link-icon.svg"
 
 function Card({header = "Header", title = "Title", extra_info = "Extra Info", 
               time = "MWF 9 - 9:50AM SLC 101", crn = "00000", 
-              credits = 3.00, students = 0, limit = 1}) {
+              credits = 3.00, students = 1, limit = 1}) {
+
+  let message = "Add"
+  const buttonStyles = {
+    backgroundColor: "#002855"
+  }
+
+  const checkStudents = (value) => {
+    const card = document.getElementById("card_button");
+    if (value == 1) {
+        buttonStyles.backgroundColor = "red"
+        message = "Closed"
+    }
+  };
+  checkStudents(students / limit)
+
   return (
     <>
       <div className="main">
@@ -21,7 +36,7 @@ function Card({header = "Header", title = "Title", extra_info = "Extra Info",
           <div className="students">
             <p> {students} / {limit}</p>
           </div>
-          <button className="card_button">{students / limit == 1 ? "Closed": "Add"}</button>
+          <button className="card_button" id="card_button" style={buttonStyles}>{message}</button>
         </div>
       </div>
     </>
