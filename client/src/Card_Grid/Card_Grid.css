@@ -4,4 +4,11 @@
     gap: 1em;
     /* NOTE: This assumes the max width of a card is 400px */
     max-height: calc(4 * 400px + 3 * 1em);
+    max-width: 400px;
+}
+
+@media (min-width: 900px) {
+    .grid_main {
+        max-width: 900px;
+    }
 }

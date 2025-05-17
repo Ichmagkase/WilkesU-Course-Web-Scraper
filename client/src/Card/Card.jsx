@@ -1,11 +1,12 @@
 import "./Card.css";
 import copy from "../assets/copy-link-icon.svg"
+import { useState } from "react"
 
 function Card({header = "Header", title = "Title", extra_info = "Extra Info", 
               time = "MWF 9 - 9:50AM SLC 101", crn = "00000", 
               credits = 3.00, students = 0, limit = 1}) {
 
-  let message = "Add"
+  const [message, setMessage] = useState("Add")
   const buttonStyles = {
     backgroundColor: "#002855"
   }
@@ -14,13 +15,12 @@ function Card({header = "Header", title = "Title", extra_info = "Extra Info",
     const card = document.getElementById("card_button");
     if (value == 1) {
         buttonStyles.backgroundColor = "red"
-        message = "Closed"
+        setMessage("Closed")
     }
   };
   checkStudents(students / limit)
 
   return (
-    <>
       <div className="main">
         <p className="header">{header}</p>
         <p className="title">{title}</p>
@@ -39,8 +39,7 @@ function Card({header = "Header", title = "Title", extra_info = "Extra Info",
           <button className="card_button" id="card_button" style={buttonStyles}>{message}</button>
           </div>
       </div>
-    </>
-  )
+  );
 }
 
 export default Card;
