@@ -8,7 +8,7 @@ function Card_Grid() {
   useEffect( () => {
     /* Simulate Getting Data */
     const tmpCards = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 18; i++) {
       tmpCards.push({
         header: `Header ${i}`,
         title: `Title ${i}`,

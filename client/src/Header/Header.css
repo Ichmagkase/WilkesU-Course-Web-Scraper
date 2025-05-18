@@ -1,0 +1,54 @@
+*:focus {outline:none !important}
+
+.header_main {
+    margin: 0;
+    padding: 0;
+    background-color: #FFFFFF;
+    min-width: 100%;
+    min-height: 8vh;
+    box-shadow: 0px 0px 15px #000000;
+    z-index:1000;
+    margin-bottom: 1em;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    position: sticky;
+    top: 0;
+    justify-content: space-between
+}
+
+.pages {
+    margin-left: 1em;
+    display: flex;
+    gap: 1em;
+}
+.pages > a {
+    cursor: pointer;
+    font-size: 1.5em;
+    border-bottom: 3px solid #D3D3D3; 
+}
+
+.pages > a:hover {
+    border-bottom: 3px solid #000000;
+}
+
+.search_and_filter > select {
+    font-family: "Merriweather sans", sans-serif;
+    font-size: 1.5em;
+    margin-right: 1em;
+    background: none;
+    border: none;
+    border-bottom: 3px solid #D3D3D3;
+}
+
+.search_and_filter > input {
+    font-family: "Merriweather sans", sans-serif;
+    font-size: 1.5em;
+    margin-right: 1em;
+    border-color: transparent;
+    border-bottom: 3px solid #D3D3D3;
+    width: 20vw;
+}
+.search_and_filter > input:hover, .search_and_filter > input:focus, .search_and_filter > select:hover, .search_and_filter > select:focus{
+    border-bottom: 3px solid #000000;
+}

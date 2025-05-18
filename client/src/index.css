@@ -4,3 +4,7 @@
 :root {
     font-family: "Merriweather Sans", system-ui;
 }
+
+body {
+    margin: 0
+}
