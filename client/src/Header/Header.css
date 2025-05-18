@@ -39,6 +39,7 @@
     background: none;
     border: none;
     border-bottom: 3px solid #D3D3D3;
+    cursor: pointer;
 }
 
 .search_and_filter > input {
@@ -47,8 +48,31 @@
     margin-right: 1em;
     border-color: transparent;
     border-bottom: 3px solid #D3D3D3;
-    width: 20vw;
+    max-width: 20vw;
+    cursor: pointer;
 }
 .search_and_filter > input:hover, .search_and_filter > input:focus, .search_and_filter > select:hover, .search_and_filter > select:focus{
     border-bottom: 3px solid #000000;
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+.icon:hover {
+    fill: #D3D3D3; 
+}
+.search_button, .filter_button {
+    background: none;
+    border: none;
+    margin: 0;
+    margin-right: 1em;
+}
+
+@media (min-width: 900px) {
+    .icon {
+        width: 32px;
+        height: 32px;
+    }
 }

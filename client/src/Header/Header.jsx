@@ -1,4 +1,6 @@
 import "./Header.css"
+import search_icon from "../assets/search-icon.svg"
+import filter_icon from "../assets/filter-icon.svg"
 import { useState, useEffect } from "react"
 
 function Header() {
@@ -25,6 +27,9 @@ function Header() {
         <a>My Courses</a>
       </nav>
       <div className="search_and_filter">
+        <button className="filter_button">
+          <img className="icon" src={filter_icon}/>
+        </button>
         <select value={semester} onChange={(event) => setSemester(event.target.value)}>
           <option value="F">Fall</option>
           <option value="Sp">Spring</option>
@@ -33,6 +38,9 @@ function Header() {
           {years.map((year, index) => (<option value={year}>{year}</option>))}
         </select>
         <input type="search" placeholder="Search Courses"/>
+        <button className="search_button">
+          <img className="icon" src={search_icon}/>
+        </button>
       </div>
     </div>
   );

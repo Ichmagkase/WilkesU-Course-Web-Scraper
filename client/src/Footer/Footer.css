@@ -1,0 +1,27 @@
+.footer_main {
+    display: flex;
+    background-color: #FFFFFF;
+    width: 100vw;
+    min-height: 5vh;
+    position: fixed;
+    align-items: center;
+    justify-content: space-between;
+    bottom: 0;
+    box-shadow: 0px 0px 25px #000000;
+}
+
+.footer_main p {
+    margin: 0;
+    font-size: 1.2em;
+    margin-right: 1em;
+}
+.footer_main > p {
+    margin-left: 1em;
+}
+.credits a {
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+}
+.credits a:hover {
+    border-bottom: 3px solid #000000;
+}
