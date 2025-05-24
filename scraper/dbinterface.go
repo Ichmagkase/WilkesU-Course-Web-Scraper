@@ -10,11 +10,20 @@ import (
     "go.mongodb.org/mongo-driver/v2/mongo"
     "go.mongodb.org/mongo-driver/v2/mongo/options"
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	"github.com/rs/cors"
 )
 
 var mongoClient *mongo.Client
 
 func responseHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Handle CORS middleware Preflight options
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	fmt.Printf("MONGO CLIENT: (responseHandler): ")
 	fmt.Println(mongoClient)
 	// get responses
@@ -123,14 +132,33 @@ func DatabaseIntializer() {
 	fmt.Println("Endpoints are being initialized!")
 	go func() {
 		defer wg.Done()
+
+		// Include CORS headers
+		c := cors.New(cors.Options{
+			AllowedOrigins: []string{
+				"http://localhost:5174",
+			},
+			AllowedMethods: []string{
+				"GET",
+			},
+			AllowedHeaders: []string{
+				"*",
+			},
+			AllowCredentials: true,
+		})
+
 		// Run HTTP server
 		mux := http.NewServeMux()
 		mux.HandleFunc("/filter", responseHandler)
 		mux.HandleFunc("/test", testResponse)
+
+		handler := c.Handler(mux)
+
 		server := http.Server{
 			Addr: ":8080",
-			Handler: mux,
+			Handler: handler,
 		}
+
 		if err := server.ListenAndServe(); err != nil {
 			panic(err)
 		}

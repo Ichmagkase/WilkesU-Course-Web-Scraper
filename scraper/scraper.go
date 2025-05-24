@@ -1080,7 +1080,7 @@ func Scraper() {
 
 	// 3 inserters, the rest are parsers
 	inserters := 3
-	parsers := 10 
+	parsers := 11
 
 	shifts := 0
 	sendDB := make(chan Course, parsers)

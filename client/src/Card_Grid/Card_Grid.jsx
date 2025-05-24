@@ -8,6 +8,12 @@ function Card_Grid() {
   useEffect( () => {
     /* Simulate Getting Data */
     const tmpCards = [];
+
+    fetch("http://localhost:8080/filter?semester=F25&instructor=kapolka")
+      .then(response => response.json())
+      .then(data => console.log(data))
+      .catch(error => console.error(error));
+
     for (let i = 0; i < 10; i++) {
       tmpCards.push({
         header: `Header ${i}`,
@@ -19,10 +25,9 @@ function Card_Grid() {
         students: `${i}`,
         limit: `${i+1}`
       });
+      let coursedata
     }
-
     setCards(tmpCards)
-
   }, []);
 
   return (
