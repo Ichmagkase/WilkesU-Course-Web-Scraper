@@ -4,6 +4,7 @@ import (
 	"context"
     "fmt"
 	"net/http"
+	"encoding/json"
 	"sync"
 	"strconv"
 
@@ -24,9 +25,7 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("MONGO CLIENT: (responseHandler): ")
-	fmt.Println(mongoClient)
-	// get responses
+	// Get responses
 	params := r.URL.Query()
 	semester := params["semester"][0]
 	deliverymode := params["deliverymode"]
@@ -53,6 +52,9 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 		status,
 	}
 
+	fmt.Println(receivedParams)
+
+	// Handle string parameters
 	filter := bson.D{}
 	for i, _  := range receivedParams {
 		if len(receivedParams[i]) > 0 {
@@ -66,6 +68,7 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Handle integer parameters
 	if len(credits) > 0 {
 		creditsint, _ := strconv.Atoi(credits[0])
 		filter = append(filter, bson.E{
@@ -92,23 +95,25 @@ func responseHandler(w http.ResponseWriter, r *http.Request) {
 	if err = response.All(context.TODO(), &results); err != nil {
 		panic(err)
 	}
-	for i := 0; i < len(results); i++ {
-		fmt.Fprintf(w, "%s %s\n", results[i].Title, results[i].Instructor)
-	}
+	b, err := json.Marshal(results)
+	fmt.Fprintf(w, string(b))
+
+	// for i := 0; i < len(results); i++ {
+	// 	fmt.Fprintf(w, "%s %s\n", results[i].Title, results[i].Instructor)
+	// }
 }
 
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello there!\n")
 }
 
- /*
-  * Establish endpoints for read operations to the database
-  */
+/*
+ * Establish endpoints for read operations to the database
+ */
 func DatabaseIntializer() {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	fmt.Println("DatabaseInitializer()")
 	fmt.Println("Database is being initialized!")
 	go func() {
 		defer wg.Done()
@@ -129,7 +134,7 @@ func DatabaseIntializer() {
 		}
 	}()
 
-	fmt.Println("Endpoints are being initialized!")
+ 	fmt.Println("Endpoints are being initialized!")
 	go func() {
 		defer wg.Done()
 
@@ -147,18 +152,17 @@ func DatabaseIntializer() {
 			AllowCredentials: true,
 		})
 
-		// Run HTTP server
+		// Build server options
 		mux := http.NewServeMux()
 		mux.HandleFunc("/filter", responseHandler)
 		mux.HandleFunc("/test", testResponse)
-
 		handler := c.Handler(mux)
-
 		server := http.Server{
 			Addr: ":8080",
 			Handler: handler,
 		}
 
+		// Serve on server
 		if err := server.ListenAndServe(); err != nil {
 			panic(err)
 		}

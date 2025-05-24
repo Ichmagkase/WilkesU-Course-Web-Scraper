@@ -18,7 +18,7 @@ func main() {
 	}()
 
 	os.Args = []string{"F","25"}
-	scraper.Scraper()
+	scraper.Scraper() //testing scraper
 	wg.Wait()
 	// scraper.ExampleInsertion()
 }
