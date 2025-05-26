@@ -1,0 +1,4 @@
+{
+    "ConfigPath": "config/config.json",
+    "MongoUri": "mongodb://mongodb:27017"
+}

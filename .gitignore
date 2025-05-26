@@ -25,4 +25,4 @@ go.work.sum
 .env
 
 # nodejs cached modules
-client/node_modules
+src/client/node_modules

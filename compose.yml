@@ -5,11 +5,11 @@ services:
     ports:
       - "27017:27017"
 
-  scraper:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: scraper 
+    container_name: api
     depends_on:
       - mongodb
     ports:
@@ -17,9 +17,9 @@ services:
 
   client:
     build:
-      context: ./client/
+      context: ./src/client/
     container_name: client
     depends_on:
-      - scraper
+      - api
     ports:
       - "5173:80"

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"io/ioutil"
+	"encoding/json"
 	"strings"
 	"strconv"
 	"golang.org/x/net/html"
@@ -11,9 +12,11 @@ import (
 	"os"
 	"regexp"
 	"sync"
+	"log"
 	"context"
 	"sync/atomic"
 	"runtime/trace"
+	"wilkesu-scrapy/api"
 )
 
 /* The course struct is what a course is expected to look like.
@@ -1015,7 +1018,8 @@ func inserter(coursesIn <-chan Course, group string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for c := range coursesIn {
 		atomic.AddInt32(&count, 1)
-		insertCourse(c, group)
+		course, _ := json.Marshal(c)
+		api.InsertCourse(course, group)
 		fmt.Println("Inserter put a course in a database")
 	}	
 }
@@ -1027,7 +1031,7 @@ func Scraper() {
 	usage: scraper [F | Sp] year
 	*/
 
-	fmt.Println("Scraper service started")
+	log.Println("Scraper service started")
 
 	// Get args
 	args := os.Args

@@ -1,4 +1,4 @@
-package scraper
+package api
 
 import (
 	"context"
@@ -14,6 +14,31 @@ import (
 
 	"github.com/rs/cors"
 )
+
+type Course struct {
+	DeliveryMode string `json:"delivery_mode,omitempty"` // F2F; HYB; null etc.
+	CourseCategory string `json:"course_category,omitempty"` // CS; MTH; ENG etc.
+	CourseId int `json:"course_id,omitempty"`
+	Section string `json:"course_section,omitempty"` // INA; A; B etc.
+	Crn int `json:"crn,omitempty"`
+	Title string `json:"title,omitempty"`// Planet Earth; Composition; Calculus I etc.
+	Credits float32 `json:"credits,omitempty"` // 3.00; 4.00 etc.
+	Day *string `json:"day,omitempty"`// MWF; TR; null etc.
+	StartTime *string `json:"start_time,omitempty"`// 0100; 0800; 0430; null etc.
+	EndTime *string `json:"end_time,omitempty"` // 0100; 0800; 0430; null etc.
+	EndTimeAMPM *string `json:"end_time_ampm,omitempty"` // AM; PM; null.
+	Location *string `json:"location,omitempty"`// SLC; BREIS; null etc.
+	RoomNum *int `json:"room_num,omitempty"` // 108, 409, any number, null etc.
+	Instructor string `json:"instructor,omitempty"` // Nye B; Simpson H; Kapolka M etc.
+	Status string `json:"status,omitempty"` // Open; Nearly; Closed.
+	Limit int `json:"limit,omitempty"` // Limit to number of students
+	Students int `json:"limit,omitempty"`
+	Waiting int `json:"waiting,omitempty"`
+	Info *string `json:"info,omitempty"` // HONORS STUDENTS ONLY; CROSS-LISTED WITH IM 350 A etc.
+	IsOnline bool `json:"is_online,omitempty"` // This is for full online classes (OL) not SOL or HYB
+	IsCourseChild bool `json:"is_course_child,omitempty"` // If this course refers to a pervious course
+	CourseChild *Course
+}
 
 var mongoClient *mongo.Client
 
@@ -124,7 +149,6 @@ func DatabaseIntializer() {
 		mongoClient, _ = mongo.Connect(opts)
 
 		fmt.Printf("MONGO CLIENT (DatabaseInitializer): ")
-		fmt.Println(mongoClient)
 
 		// Keep the Go compiler happy
 		var result bson.M
@@ -172,7 +196,6 @@ func DatabaseIntializer() {
 }
 
 // Query Methods
-
 /*
  * Insert a course into the admin database in collection named semester
  * Arguments:

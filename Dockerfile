@@ -1,6 +1,6 @@
 FROM golang:1.24-bookworm
 
-COPY . .
+COPY ./src .
 
 RUN go mod download
 
