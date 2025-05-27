@@ -165,7 +165,7 @@ func DatabaseIntializer() {
 		// Include CORS headers
 		c := cors.New(cors.Options{
 			AllowedOrigins: []string{
-				"http://localhost:5174",
+				"http://localhost:5173",
 			},
 			AllowedMethods: []string{
 				"GET",

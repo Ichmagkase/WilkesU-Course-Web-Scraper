@@ -1,6 +1,9 @@
 import "./Header.css"
 import search_icon from "../assets/search-icon.svg"
 import filter_icon from "../assets/filter-icon.svg"
+import bars_icon from "../assets/bars-solid.svg"
+import xmark from "../assets/xmark.svg"
+
 import { useState, useEffect } from "react"
 
 function Header() {
@@ -8,6 +11,8 @@ function Header() {
   const [semester, setSemester] = useState("Sp")
   const [year, setYear] = useState(0)
   const [years, setYears] = useState([])
+  const [filterVisible, setFilterVisible] = useState(false)
+  const [animate, setAnimate] = useState(false);
 
   useEffect( () => {
     /* Simulate Data */
@@ -20,14 +25,19 @@ function Header() {
     setYear(years[0])
   }, [])
 
+  function toggleFilter() {
+    setFilterVisible(!filterVisible)
+  }
+
   return (
+    <>
     <div className="header_main">
       <nav className="pages">
         <a>Courses</a>
         <a>My Courses</a>
       </nav>
       <div className="search_and_filter">
-        <button className="filter_button">
+        <button className="filter_button" onClick={toggleFilter}>
           <img className="icon" src={filter_icon}/>
         </button>
         <select value={semester} onChange={(event) => setSemester(event.target.value)}>
@@ -43,6 +53,10 @@ function Header() {
         </button>
       </div>
     </div>
+    <div className={`${filterVisible ? "visible" : ""} filter_main`}>
+      <p> HELLO! </p>
+    </div>
+    </>
   );
 }
 
