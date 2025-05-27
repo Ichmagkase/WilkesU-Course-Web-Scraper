@@ -12,7 +12,6 @@ function Header() {
   const [year, setYear] = useState(0)
   const [years, setYears] = useState([])
   const [filterVisible, setFilterVisible] = useState(false)
-  const [animate, setAnimate] = useState(false);
 
   useEffect( () => {
     /* Simulate Data */
@@ -27,6 +26,10 @@ function Header() {
 
   function toggleFilter() {
     setFilterVisible(!filterVisible)
+  }
+
+  function closeFilter() {
+    setFilterVisible(false)
   }
 
   return (
@@ -54,7 +57,13 @@ function Header() {
       </div>
     </div>
     <div className={`${filterVisible ? "visible" : ""} filter_main`}>
-      <p> HELLO! </p>
+      <button className="close_button" onClick={closeFilter}>
+        <img className="icon" src={xmark}/>
+      </button>
+
+      <p>I am an empty filter, I need stuff</p>
+
+
     </div>
     </>
   );
