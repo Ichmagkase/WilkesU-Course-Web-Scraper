@@ -17,7 +17,7 @@
  *   entries must also be added to the Configuration
  *   struct, and default values should be updated under
  *   defaultConfig in createDefault.
- */
+*/
 package config
 
 import (
@@ -46,7 +46,7 @@ func createDefault(path string) {
 
 	defaultConfig, err := json.Marshal(Configuration{
 		ConfigPath:  "config/config.json",
-        MongoUri:    "mongodb://mongodb:27017",
+		MongoUri:    "mongodb://mongodb:27017",
 	})
 	if err != nil {
 		log.Fatal("config.go: ", err)
