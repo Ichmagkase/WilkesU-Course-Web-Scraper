@@ -40,7 +40,7 @@ type Course struct {
 	Instructor string `json:"instructor,omitempty"` // Nye B; Simpson H; Kapolka M etc.
 	Status string `json:"status,omitempty"` // Open; Nearly; Closed.
 	Limit int `json:"limit,omitempty"` // Limit to number of students
-	Students int `json:"limit,omitempty"`
+	Students int `json:"students,omitempty"`
 	Waiting int `json:"waiting,omitempty"`
 	Info *string `json:"info,omitempty"` // HONORS STUDENTS ONLY; CROSS-LISTED WITH IM 350 A etc.
 	IsOnline bool `json:"is_online,omitempty"` // This is for full online classes (OL) not SOL or HYB

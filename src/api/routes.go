@@ -35,7 +35,7 @@ type Course struct {
 	RoomNum        *int      `json:"room_num,omitempty"` // 108, 409, any number, null etc.
 	Instructor     string    `json:"instructor,omitempty"` // Nye B; Simpson H; Kapolka M etc.
 	Status         string    `json:"status,omitempty"` // Open; Nearly; Closed.
-	Limit          int       `json:"limit,omitempty"` // Limit to number of students
+	Limit          int       `json:"students,omitempty"` // Limit to number of students
 	Students       int       `json:"limit,omitempty"`
 	Waiting        int       `json:"waiting,omitempty"`
 	Info           *string   `json:"info,omitempty"` // HONORS STUDENTS ONLY; CROSS-LISTED WITH IM 350 A etc.

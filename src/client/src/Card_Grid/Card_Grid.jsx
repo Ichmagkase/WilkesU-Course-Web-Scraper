@@ -1,7 +1,8 @@
 import "./Card_Grid.css"
 import Card from "../Card/Card.jsx"
 import { useEffect, useState } from "react"
-function Card_Grid() {
+
+export default function Card_Grid() {
 
   const [cards, setCards] = useState([]);
 
@@ -9,26 +10,48 @@ function Card_Grid() {
     /* Simulate Getting Data */
     const tmpCards = [];
 
-    fetch("http://localhost:8080/filter?semester=F25&instructor=kapolka")
-      .then(response => response.json())
-      .then(data => console.log(data))
-      .catch(error => console.error(error));
-
-    for (let i = 0; i < 10; i++) {
-      tmpCards.push({
-        header: `Header ${i}`,
-        title: `Title ${i}`,
-        credits: `${i}`,
-        extra_info: `Extra Info ${i}`,
-        time: `Time ${i}`,
-        crn: `${i}0000`,
-        students: `${i}`,
-        limit: `${i+1}`
-      });
-      let coursedata
+    const filter = {
+      semester: "F25",
+      deliverymode: "",
+      coursecategory: "",
+      location: "",
+      instructor: "",
+      status: "",
     }
-    setCards(tmpCards)
+
+    const params = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(filter)) {
+      if (value !== "") {
+        params.append(key, value);
+      }
+    }
+
+    const url = `http://localhost:8080/filter?${params.toString()}`;
+
+    let courses;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        courses = data
+        for (let i = 0; i < courses.length; i++) {
+          tmpCards.push({
+            header: `${courses[i].course_category + " " + courses[i].course_id}`,
+            title: `${courses[i].title}`,
+            credits: `${courses[i].credits}`,
+            extra_info: `${courses[i].info}`,
+            time: `${courses[i].start_time} - ${courses[i].end_time + courses[i].end_time_ampm}`,
+            crn: `${courses[i].crn}`,
+            students: `${courses[i].students}`,
+            limit: `${courses[i].limit}`
+          });
+        }
+        setCards(tmpCards)
+      })
+      .catch(error => console.error(error));
   }, []);
+
+
 
   return (
     <>
@@ -38,5 +61,3 @@ function Card_Grid() {
     </>
   )
 }
-
-export default Card_Grid

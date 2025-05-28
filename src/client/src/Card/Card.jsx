@@ -11,14 +11,20 @@ function Card({header = "Header", title = "Title", extra_info = "Extra Info",
     backgroundColor: "#002855"
   }
 
-  const checkStudents = (value) => {
-    const card = document.getElementById("card_button");
-    if (value == 1) {
-        buttonStyles.backgroundColor = "red"
-        setMessage("Closed")
-    }
+  // const checkStudents = (value) => {
+  //   const card = document.getElementById("card_button");
+  //   if (value == 1) {
+  //       buttonStyles.backgroundColor = "red"
+  //       setMessage("Closed")
+  //   }
+  // };
+  // checkStudents(students / limit)
+
+  const isFull = students >= limit;
+  const buttonLabel = isFull ? "Closed" : "Add";
+  const buttonStyle = {
+    backgroundColor: isFull ? "red" : "#002855"
   };
-  checkStudents(students / limit)
 
   return (
       <div className="main">
@@ -36,7 +42,7 @@ function Card({header = "Header", title = "Title", extra_info = "Extra Info",
           <div className="students">
             <p> {students} / {limit}</p>
           </div>
-          <button className="card_button" id="card_button" style={buttonStyles}>{message}</button>
+          <button className="card_button" id="card_button" style={buttonStyle}>{buttonLabel}</button>
           </div>
       </div>
   );
