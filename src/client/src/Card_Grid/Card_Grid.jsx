@@ -12,11 +12,15 @@ export default function Card_Grid() {
 
     const filter = {
       semester: "F25",
-      deliverymode: "",
-      coursecategory: "",
-      location: "",
-      instructor: "",
-      status: "",
+
+      // The following filter options may also be enabled for
+      // serverside filtering (via a DB call)
+
+      // deliverymode: "",
+      // coursecategory: "",
+      // location: "",
+      // instructor: "",
+      // status: "",
     }
 
     const params = new URLSearchParams();
@@ -28,7 +32,6 @@ export default function Card_Grid() {
     }
 
     const url = `http://localhost:8080/filter?${params.toString()}`;
-
     let courses;
     fetch(url)
       .then(response => response.json())
@@ -37,6 +40,8 @@ export default function Card_Grid() {
         for (let i = 0; i < courses.length; i++) {
           tmpCards.push({
             header: `${courses[i].course_category + " " + courses[i].course_id}`,
+            instructor: `${courses[i].instructor}`,
+            section: `${courses[i].course_section}`,
             title: `${courses[i].title}`,
             credits: `${courses[i].credits}`,
             extra_info: `${courses[i].info}`,
@@ -50,8 +55,6 @@ export default function Card_Grid() {
       })
       .catch(error => console.error(error));
   }, []);
-
-
 
   return (
     <>

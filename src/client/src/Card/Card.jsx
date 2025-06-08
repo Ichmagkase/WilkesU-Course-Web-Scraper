@@ -2,7 +2,7 @@ import "./Card.css";
 import copy from "../assets/copy-link-icon.svg"
 import { useState } from "react"
 
-function Card({header = "Header", title = "Title", extra_info = "Extra Info", 
+function Card({header = "Header", instructor = "Instructor", section = "Section", title = "Title", extra_info = "Extra Info",
               time = "MWF 9 - 9:50AM SLC 101", crn = "00000", 
               credits = 3.00, students = 0, limit = 1}) {
 
@@ -23,12 +23,13 @@ function Card({header = "Header", title = "Title", extra_info = "Extra Info",
   const isFull = students >= limit;
   const buttonLabel = isFull ? "Closed" : "Add";
   const buttonStyle = {
-    backgroundColor: isFull ? "red" : "#002855"
+    backgroundColor: isFull ? "red" : "#002855",
+    cursor: isFull ? "auto" : "pointer"
   };
 
   return (
       <div className="main">
-        <p className="header">{header}</p>
+        <p className="header">{header} ({section}) - {instructor}</p>
         <p className="title">{title}</p>
         <p className="credits">Credits: {parseFloat(credits).toFixed(2)}</p>
         <p className="extra_info">{extra_info}</p>

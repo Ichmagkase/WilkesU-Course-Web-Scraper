@@ -81,6 +81,7 @@
   display: none;
   flex-direction: column;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  overflow-y: scroll;
 }
 
 .filter_main.visible {
@@ -88,9 +89,86 @@
   animation: slide-in 0.3s ease-out forwards;
 }
 
+.filter_option {
+  font-size: 30px;
+  margin-left: 20px;
+  margin-right:20px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
 .close_button {
     align-self: flex-end;
     width: fit-content;
+}
+
+.check-opt {
+  width: 20px;
+  height: 20px;
+  margin-left: 20px;
+  cursor: pointer;
+}
+
+.opt-label {
+  padding: 10px;
+  font-size: 20px;
+}
+
+#per_page_label {
+  margin-left: 15px;
+}
+
+.filter_action {
+  cursor: pointer;
+  width: 30%;
+  margin-bottom: 40px;
+  margin-left: 30%;
+  background-color: #002855;
+  color: white;
+  border-radius: 10px;
+  border: none;
+  font-size: 20px;
+
+}
+
+textarea {
+  width: 70%;
+  margin-left: 20px;
+  border-radius: 10px;
+  border-color: #D3D3D3;
+  padding: 5px;
+  font-family: "Merriweather sans", sans-serif;
+  font-size: 1em;
+}
+
+.dropdown-opt {
+  cursor: pointer;
+  width: 70%;
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  margin-left: 20px;
+  margin-top: 5px;
+  font-family: "Merriweather sans", sans-serif;
+  padding: 10px;
+  border-color: #D3D3D3;
+  font-size: 15px;
+}
+
+#slider {
+  width: 80%;
+  margin-left: 30px;
+}
+
+#time {
+  padding-left: 33%;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    height: 25px;
+    width: 20px;
+    background-image: url("../assets/xmark.svg");
+    background-position: 50%;
 }
 
 @keyframes slide-in {
