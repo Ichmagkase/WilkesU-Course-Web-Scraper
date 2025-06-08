@@ -12,10 +12,10 @@ function Header() {
   const [year, setYear] = useState(0)
   const [years, setYears] = useState([])
   const [filterVisible, setFilterVisible] = useState(false)
-  const [value, setValue] = useState([7, 21])
+  const [value, setValue] = useState([8, 22])
   const [otherSelected, isOther] = useState(false)
-  const [startTime, setStartTime] = useState(7)
-  const [endTime, setEndTime] = useState(21)
+  const [startTime, setStartTime] = useState(8)
+  const [endTime, setEndTime] = useState(22)
 
   const handleSliderChange = (event, newValue) => {
     setValue(newValue);
@@ -160,7 +160,7 @@ function Header() {
                   min={8}
                   max={22}
           />
-          <p id="time">{startTime < 13  ? startTime : startTime%13 + 1}{startTime/13 < 1 ? "am" : "pm"}
+          <p id="time">{startTime < 13  ? startTime : startTime%13 + 1}{startTime/12 < 1 ? "am" : "pm"}
             &nbsp;-&nbsp;
              {endTime < 13 ? endTime : endTime%13 + 1}{endTime/13 < 1 ? "am" : "pm"}</p>
         </div>
