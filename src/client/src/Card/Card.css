@@ -3,6 +3,7 @@
     border: 2px #000000 solid;
     border-radius: 10px;
     max-width: 400px;
+    min-width: 400px;
     max-height: 229px;
 }
 .header {
