@@ -1,15 +1,18 @@
 import Header from "./Header/Header.jsx"
 import Card_Grid from "./Card_Grid/Card_Grid.jsx"
 import Footer from "./Footer/Footer.jsx"
+import { useState } from 'react';
 
-function App() {
+export default function App() {
+
+  const [clientSearch, setSearchTerm] = useState("")
+  console.log(clientSearch)
+
   return (
     <>
-      <Header/>
-      <Card_Grid/>
+      <Header searchSetter={setSearchTerm}/>
+      <Card_Grid searchState={clientSearch}/>
       <Footer/>
     </>
   )
 }
-
-export default App

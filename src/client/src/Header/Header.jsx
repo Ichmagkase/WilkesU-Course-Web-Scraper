@@ -6,8 +6,7 @@ import xmark from "../assets/xmark.svg"
 import Slider from '@mui/material/Slider'
 import { useState, useEffect } from "react"
 
-function Header() {
-
+function Header({searchSetter}) {
   const [semester, setSemester] = useState("Sp")
   const [year, setYear] = useState(0)
   const [years, setYears] = useState([])
@@ -25,6 +24,19 @@ function Header() {
 
   const handleRadioChange = (event) => {
     isOther(event.target.value === "other")
+  }
+
+  const validate_and_search = (searchTerm) => {
+    console.log(searchTerm)
+    searchSetter(searchTerm)
+  }
+
+  const validateForm = (event) => {
+    event.preventDefault();
+    const events = {
+      "searchForm": validate_and_search(document.forms["searchForm"]["searchBox"].value)
+    };
+    events[event.target.name];
   }
 
   useEffect( () => {
@@ -64,7 +76,9 @@ function Header() {
           <select>
             {years.map((year, index) => (<option value={year}>{year}</option>))}
           </select>
-          <input type="search" placeholder="Search Courses"/>
+          <form className="search_and_filter" name="searchForm" onSubmit={validateForm}>
+            <input type="search" name="searchBox" placeholder="Search Courses"/>
+          </form>
           <button className="search_button">
             <img className="icon" src={search_icon}/>
           </button>

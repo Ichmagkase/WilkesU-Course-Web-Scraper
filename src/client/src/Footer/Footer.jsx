@@ -5,7 +5,7 @@ function Footer() {
 
   const [updateTime, setUpdateTime] = useState(new Date())
 
-  let updateTimeString = "Unknow"
+  let updateTimeString = "Unknown"
 
   /* Update time will need to be gathered from the server */
   

@@ -2,15 +2,16 @@ import "./Card_Grid.css"
 import Card from "../Card/Card.jsx"
 import { useEffect, useState } from "react"
 
-export default function Card_Grid() {
-
+export default function Card_Grid({searchState}) {
   const [cards, setCards] = useState([]);
 
   useEffect( () => {
-    /* Simulate Getting Data */
+    const searchTerm = searchState;
     const tmpCards = [];
 
-    const filter = {
+    console.log("load");
+
+    const serverFilter = {
       semester: "F25",
 
       // The following filter options may also be enabled for
@@ -25,7 +26,7 @@ export default function Card_Grid() {
 
     const params = new URLSearchParams();
 
-    for (const [key, value] of Object.entries(filter)) {
+    for (const [key, value] of Object.entries(serverFilter)) {
       if (value !== "") {
         params.append(key, value);
       }
@@ -38,23 +39,32 @@ export default function Card_Grid() {
       .then(data => {
         courses = data
         for (let i = 0; i < courses.length; i++) {
-          tmpCards.push({
-            header: `${courses[i].course_category + " " + courses[i].course_id}`,
-            instructor: `${courses[i].instructor}`,
-            section: `${courses[i].course_section}`,
-            title: `${courses[i].title}`,
-            credits: `${courses[i].credits}`,
-            extra_info: `${courses[i].info}`,
-            time: `${courses[i].start_time} - ${courses[i].end_time + courses[i].end_time_ampm}`,
-            crn: `${courses[i].crn}`,
-            students: `${courses[i].students}`,
-            limit: `${courses[i].limit}`
-          });
+          if ((courses[i].course_category ? String(courses[i].course_category) : '').toLowerCase().includes(searchState.toLowerCase()) ||
+              (courses[i].instructor      ? String(courses[i].instructor)      : '').toLowerCase().includes(searchState.toLowerCase()) ||
+              (courses[i].course_section  ? String(courses[i].course_section)  : '').toLowerCase().includes(searchState.toLowerCase()) ||
+              (courses[i].title           ? String(courses[i].title)           : '').toLowerCase().includes(searchState.toLowerCase()) ||
+              (courses[i].info            ? String(courses[i].info)            : '').toLowerCase().includes(searchState.toLowerCase()) ||
+              (courses[i].crn             ? String(courses[i].crn)             : '').toLowerCase().includes(searchState.toLowerCase())
+             ) {
+            tmpCards.push({
+              header: `${courses[i].course_category + " " + courses[i].course_id}`,
+              instructor: `${courses[i].instructor}`,
+              section: `${courses[i].course_section}`,
+              title: `${courses[i].title}`,
+              credits: `${courses[i].credits}`,
+              extra_info: `${courses[i].info}`,
+              time: `${courses[i].start_time} - ${courses[i].end_time + courses[i].end_time_ampm}`,
+              crn: `${courses[i].crn}`,
+              students: `${courses[i].students}`,
+              limit: `${courses[i].limit}`
+            });
+          }
+
         }
         setCards(tmpCards)
       })
       .catch(error => console.error(error));
-  }, []);
+  }, [searchState]);
 
   return (
     <>

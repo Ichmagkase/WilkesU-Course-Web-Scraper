@@ -32,6 +32,10 @@
     border-bottom: 3px solid #000000;
 }
 
+.search_and_filter {
+  display: inline;
+}
+
 .search_and_filter > select {
     font-family: "Merriweather sans", sans-serif;
     font-size: 1.5em;
