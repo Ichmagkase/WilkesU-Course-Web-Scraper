@@ -5,12 +5,11 @@ import { useState } from 'react';
 
 export default function App() {
 
-  const [clientSearch, setSearchTerm] = useState("")
-  console.log(clientSearch)
+  const [clientSearch, setSearchTerm] = useState({})
 
   return (
     <>
-      <Header searchSetter={setSearchTerm}/>
+      <Header setFilter={setSearchTerm}/>
       <Card_Grid searchState={clientSearch}/>
       <Footer/>
     </>
