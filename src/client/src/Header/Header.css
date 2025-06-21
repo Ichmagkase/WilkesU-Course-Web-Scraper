@@ -67,6 +67,11 @@
 .icon:hover {
     fill: #D3D3D3; 
 }
+#apply_button {
+  padding: 10px;
+  margin: 20px;
+
+}
 .search_button, .filter_button, .close_button {
     background: none;
     border: none;

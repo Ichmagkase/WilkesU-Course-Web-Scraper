@@ -2,7 +2,7 @@ import "./Card_Grid.css"
 import Card from "../Card/Card.jsx"
 import { useEffect, useState } from "react"
 
-export default function Card_Grid({searchState}) {
+export default function Card_Grid({searchState, filterVisible}) {
   const [cards, setCards] = useState([]);
 
 
@@ -27,6 +27,10 @@ export default function Card_Grid({searchState}) {
     //         String(course.location).toLowerCase().includes(value) ||
     //         String(course.title).toLowerCase().includes(value) ||
     //         String(course.info).toLowerCase().includes(value))
+  }
+
+  const GridWidth = {
+    maxWidth: filterVisible ? "calc(100vw - 500px - 10px)" : "100vw"
   }
 
   useEffect( () => {
@@ -118,7 +122,7 @@ export default function Card_Grid({searchState}) {
 
   return (
     <>
-      <div className="grid_main">
+      <div className="grid_main" style={GridWidth}>
         {cards.map((props, index) => <Card key={index} {...props} />)}
       </div>
     </>

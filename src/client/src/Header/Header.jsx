@@ -6,11 +6,10 @@ import xmark from "../assets/xmark.svg"
 import Slider from '@mui/material/Slider'
 import { useState, useEffect } from "react"
 
-function Header({setFilter}) {
+function Header({setSearchTerm, filterVisible, setFilterVisible}) {
   const [semester, setSemester] = useState("Sp")
   const [year, setYear] = useState(0)
   const [years, setYears] = useState([])
-  const [filterVisible, setFilterVisible] = useState(false)
   const [value, setValue] = useState([8, 22])
   const [otherSelected, isOther] = useState(false)
   const [startTime, setStartTime] = useState(8)
@@ -31,7 +30,7 @@ function Header({setFilter}) {
       mode: "search",
       value: searchValue
     }
-    setFilter(searchParameters);
+    setSearchTerm(searchParameters);
   }
 
   const filter = (filterForm) => {
@@ -60,7 +59,7 @@ function Header({setFilter}) {
       instructor: filterForm["instructor-text-box"].value,
       location: filterForm["location-dropdown"].value,
     }
-    setFilter(filterParameters);
+    setSearchTerm(filterParameters);
   }
 
   const validateForm = (event) => {
@@ -92,6 +91,10 @@ function Header({setFilter}) {
     setFilterVisible(false)
   }
 
+  const searchAndFilterMargin = {
+    marginRight: filterVisible ? "500px" : "0px"
+  }
+
   return (
     <>
       <div className="header_main">
@@ -99,7 +102,7 @@ function Header({setFilter}) {
           <a>Courses</a>
           <a>My Courses</a>
         </nav>
-        <div className="search_and_filter">
+        <div className="search_and_filter" style={searchAndFilterMargin}>
           <button className="filter_button" onClick={toggleFilter}>
             <img className="icon" src={filter_icon}/>
           </button>
@@ -253,11 +256,7 @@ function Header({setFilter}) {
               <option value="100">100</option>
             </select>
           </div>
-          <br></br>
-          <br></br>
-          <br></br>
-          <br></br>
-          <button className="filter_action" onClick={validateForm} name="filterForm">
+          <button className="filter_action" onClick={validateForm} name="filterForm" id="apply_button">
             Apply
           </button>
         </div>

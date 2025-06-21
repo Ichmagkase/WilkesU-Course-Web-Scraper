@@ -5,14 +5,14 @@ import { useState } from 'react';
 
 export default function App() {
 
-  const [clientSearch, setSearchTerm] = useState({})
-  console.log("App: ")
-  console.log(clientSearch);
+  const [searchState, setSearchTerm] = useState({})
+  const [filterVisible, setFilterVisible] = useState(false)
+  console.log("updated state")
 
   return (
     <>
-      <Header setFilter={setSearchTerm}/>
-      <Card_Grid searchState={clientSearch} className="card-grid-wrapper"/>
+      <Header setSearchTerm={setSearchTerm} filterVisible={filterVisible} setFilterVisible={setFilterVisible}/>
+      <Card_Grid searchState={searchState} filterVisible={filterVisible}/>
       <Footer/>
     </>
   )
