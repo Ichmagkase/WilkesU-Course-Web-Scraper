@@ -27,23 +27,50 @@ function Header({setFilter}) {
   }
 
   const search = (searchValue) => {
-    setFilter(searchValue);
+    const searchParameters = {
+      mode: "search",
+      value: searchValue
+    }
+    setFilter(searchParameters);
   }
 
   const filter = (filterForm) => {
     // Set filter parameters here
-    // TODO: pull parameters from form and pass into setFilter
-    const parameters = {}
-    setFilter(parameters);
+    // TODO: Sanitize text inputs
+    const day = (filterForm["m-opt"].checked ? "m" : "")
+          + (filterForm["t-opt"].checked ? "t" : "")
+          + (filterForm["w-opt"].checked ? "w" : "")
+          + (filterForm["r-opt"].checked ? "r" : "")
+          + (filterForm["f-opt"].checked ? "f" : "")
+
+    const filterParameters = {
+      mode: "filter",
+      f2f: filterForm["f2f-opt"].checked,
+      hyb: filterForm["hyb-opt"].checked,
+      ol: filterForm["ol-opt"].checked,
+      courseCategory: filterForm["category-text-box"].value,
+      crn: "", // No support for filtering by crn. Search bar is better.
+      title: "", // No support for filtering by title. Search bar is better.
+      credits: filterForm["credits-dropdown"].value,
+      day: day,
+      time: filterForm["time"].value,
+      startTime: startTime,
+      endTime: endTime,
+      hideClosed: filterForm["hide-closed-opt"].checked,
+      instructor: filterForm["instructor-text-box"].value,
+      location: filterForm["location-dropdown"].value,
+    }
+    setFilter(filterParameters);
   }
 
   const validateForm = (event) => {
     event.preventDefault();
     const events = {
-      "searchForm": search(document.forms["searchForm"]["searchBox"].value),
-      "filterForm": filter(document.forms["filterForm"])
+      "searchForm": () => search(document.forms["searchForm"]["searchBox"].value),
+      "filterForm": () => filter(document.forms["filterForm"])
     };
-    events[event.target.name];
+    console.log(event.target.name)
+    events[event.target.name]()
   }
 
   useEffect( () => {
@@ -111,7 +138,7 @@ function Header({setFilter}) {
           </div>
           <div>
             <p className="filter_option">Course Category</p>
-            <textarea id="instructor-opt" rows="3" cols="50" placeholder="MTH, ENG, etc." spellCheck="false" name="category_text_box"></textarea>
+            <textarea id="instructor-opt" rows="3" cols="50" placeholder="MTH, ENG, etc." spellCheck="false" name="category-text-box"></textarea>
           </div>
           <div>
             <p className="filter_option">Credits</p>
@@ -147,7 +174,7 @@ function Header({setFilter}) {
           <div>
             <p className="filter_option">Time</p>
             <input type="radio"
-                   name="time-am"
+                   name="time"
                    className="check-opt"
                    id="am-opt"
                    value="am"
@@ -155,7 +182,7 @@ function Header({setFilter}) {
             />
             <label htmlFor="am-opt" className="opt-label">AM</label>
             <input type="radio"
-                   name="time-pm"
+                   name="time"
                    className="check-opt"
                    id="pm-opt"
                    value="pm"
@@ -163,7 +190,7 @@ function Header({setFilter}) {
             />
             <label htmlFor="pm-opt" className="opt-label">PM</label>
             <input type="radio"
-                   name="time-other"
+                   name="time"
                    className="check-opt"
                    id="other-opt"
                    value="other"
@@ -173,7 +200,7 @@ function Header({setFilter}) {
             <br></br>
             <br></br>
             <Slider id="slider"
-                    name="time-slider"
+                    name="time"
                     value={value}
                     onChange={handleSliderChange}
                     disabled={!otherSelected}
@@ -181,9 +208,11 @@ function Header({setFilter}) {
                     min={8}
                     max={22}
             />
-            <p id="time">{startTime < 13  ? startTime : startTime%13 + 1}{startTime/12 < 1 ? "am" : "pm"}
+            <p id="time">
+              {startTime < 13  ? startTime : startTime%13 + 1}{startTime/12 < 1 ? "am" : "pm"}
               &nbsp;-&nbsp;
-            {endTime < 13 ? endTime : endTime%13 + 1}{endTime/13 < 1 ? "am" : "pm"}</p>
+              {endTime < 13 ? endTime : endTime%13 + 1}{endTime/13 < 1 ? "am" : "pm"}
+            </p>
           </div>
           <div>
             <p className="filter_option">Location</p>
@@ -228,7 +257,7 @@ function Header({setFilter}) {
           <br></br>
           <br></br>
           <br></br>
-          <button className="filter_action" onClick={closeFilter} name="apply-button">
+          <button className="filter_action" onClick={validateForm} name="filterForm">
             Apply
           </button>
         </div>
