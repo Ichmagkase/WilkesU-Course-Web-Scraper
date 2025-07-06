@@ -58,7 +58,10 @@ function Header({setSearchTerm, filterVisible, setFilterVisible}) {
       hideClosed: filterForm["hide-closed-opt"].checked,
       instructor: filterForm["instructor-text-box"].value,
       location: filterForm["location-dropdown"].value,
+      perPage: filterForm["course-quant-opt"].value,
+      filterType: filterForm["UnionIntersectionOpt"].value
     }
+    console.log(filterParameters);
     setSearchTerm(filterParameters);
   }
 
@@ -66,10 +69,15 @@ function Header({setSearchTerm, filterVisible, setFilterVisible}) {
     event.preventDefault();
     const events = {
       "searchForm": () => search(document.forms["searchForm"]["searchBox"].value),
+      "searchBox": () => search(document.forms["searchForm"]["searchBox"].value),
       "filterForm": () => filter(document.forms["filterForm"])
     };
     console.log(event.target.name)
-    events[event.target.name]()
+    try {
+      events[event.target.name]();
+    } catch {
+      console.log("Unknown event targe name: " + event.target.name)
+    }
   }
 
   useEffect( () => {
@@ -113,18 +121,26 @@ function Header({setSearchTerm, filterVisible, setFilterVisible}) {
           <select>
             {years.map((year, index) => (<option value={year}>{year}</option>))}
           </select>
-          <form className="search_and_filter" name="searchForm" onSubmit={validateForm}>
-            <input type="search" name="searchBox" placeholder="Search Courses"/>
+          <form className="search_and_filter" name="searchForm" onChange={validateForm}>
+            <button type="button" className="search_button" onClick={validateForm}>
+              <img className="icon" src={search_icon} name="searchForm"/>
+            </button>
+            <input type="search"
+                   name="searchBox"
+                   placeholder="Search Courses"
+                   onKeyDown={ (e) => {
+                     if (e.key === "Enter") {
+                       e.preventDefault();
+                     }
+                   }}/>
+
           </form>
-          <button className="search_button">
-            <img className="icon" src={search_icon}/>
-          </button>
         </div>
       </div>
 
       <form className="filter_panel" name="filterForm" onSubmit={validateForm}>
         <div className={`${filterVisible ? "visible" : ""} filter_main`}>
-          <button className="close_button" onClick={closeFilter}>
+          <button type="button" className="close_button" onClick={closeFilter}>
             <img className="icon" src={xmark}/>
           </button>
           <div>
@@ -255,6 +271,15 @@ function Header({setSearchTerm, filterVisible, setFilterVisible}) {
               <option value="50">50</option>
               <option value="100">100</option>
             </select>
+            <br></br>
+            <br></br>
+            <label className="opt-label">Filter type</label>
+            <br></br>
+            <input id="UnionOpt" className="check-opt" type="radio" name="UnionIntersectionOpt" value="U" onChange={handleRadioChange}/>
+            <label htmlFor="UnionOpt" className="opt-label">Union</label>
+            <br></br>
+            <input id="UnionIntersectionOpt" className="check-opt" type="radio" name="UnionIntersectionOpt" value="I" onChange={handleRadioChange} checked="checked" />
+            <label htmlFor="IntersectionOpt"className="opt-label">Intersection</label>
           </div>
           <button className="filter_action" onClick={validateForm} name="filterForm" id="apply_button">
             Apply

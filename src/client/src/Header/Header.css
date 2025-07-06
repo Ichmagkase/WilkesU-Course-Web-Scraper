@@ -73,10 +73,10 @@
 
 }
 .search_button, .filter_button, .close_button {
-    background: none;
-    border: none;
-    margin: 0;
-    margin-right: 1em;
+  background: none;
+  border: none;
+  margin: 0;
+  margin-right: 1em;
 }
 
 .filter_main {
@@ -121,9 +121,6 @@
 .opt-label {
   padding: 10px;
   font-size: 20px;
-}
-
-#per_page_label {
   margin-left: 15px;
 }
 

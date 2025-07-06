@@ -5,16 +5,15 @@ import { useEffect, useState } from "react"
 export default function Card_Grid({searchState, filterVisible}) {
   const [cards, setCards] = useState([]);
 
-
   // TODO: implement course validation by Filter
   const validateByFilter = (course) => {
 
   }
 
-  // TODO: implement course validation by Search
   const validateBySearch = (course) => {
     const value = searchState.value.toLowerCase()
-    return ((course.course_category ? String(course.course_category) : '').toLowerCase().includes(value) ||
+
+    return ((course.course_category ? String(course.course_category) + " " + String(course.course_id)  : '').toLowerCase().includes(value) ||
             (course.instructor ? String(course.instructor) : '').toLowerCase().includes(value) ||
             (course.crn ? String(course.crn) : '').includes(value) ||
             (course.location ? String(course.location) : '').toLowerCase().includes(value) ||
@@ -35,8 +34,6 @@ export default function Card_Grid({searchState, filterVisible}) {
 
   useEffect( () => {
     const searchTerm = searchState;
-    const tmpCards = [];
-
     const serverFilter = {
       semester: "F25",
 
@@ -63,59 +60,38 @@ export default function Card_Grid({searchState, filterVisible}) {
     fetch(url)
       .then(response => response.json())
       .then(data => {
-        courses = data;
-        if (searchState.mode == "search") {
-          for (let i = 0; i < courses.length; i++) {
-            console.log(validateBySearch(courses[i]))
-            if (validateBySearch(courses[i])) {
-              tmpCards.push({
-                header: `${courses[i].course_category + " " + courses[i].course_id}`,
-                instructor: `${courses[i].instructor}`,
-                section: `${courses[i].course_section}`,
-                title: `${courses[i].title}`,
-                credits: `${courses[i].credits}`,
-                extra_info: `${courses[i].info}`,
-                time: `${courses[i].start_time} - ${courses[i].end_time + courses[i].end_time_ampm}`,
-                crn: `${courses[i].crn}`,
-                students: `${courses[i].students}`,
-                limit: `${courses[i].limit}`
-              });
-            }
-          }
-        } else if (searchState.mode == "filter"){
-          for (let i = 0; i < courses.length; i++) {
-            if (validateByFilter(courses[i])) {
-              tmpCards.push({
-                header: `${courses[i].course_category + " " + courses[i].course_id}`,
-                instructor: `${courses[i].instructor}`,
-                section: `${courses[i].course_section}`,
-                title: `${courses[i].title}`,
-                credits: `${courses[i].credits}`,
-                extra_info: `${courses[i].info}`,
-                time: `${courses[i].start_time} - ${courses[i].end_time + courses[i].end_time_ampm}`,
-                crn: `${courses[i].crn}`,
-                students: `${courses[i].students}`,
-                limit: `${courses[i].limit}`
-              });
-            }
-          }
+        const courses = data;
+        let tmpCards = [];
+        const addCard = (course) => {
+          const category = course.course_category;
+          const courseid = course.course_id ? course.course_id : course.course_id = "";
+          const extra_info = course.info ? course.info : course.info = "";
+          let time = course.start_time ? course.start_time : course.start_time = "TBA";
+          time = String(course.start_time).includes("TBA") ? "Time: TBA" : `${course.start_time} - ${course.end_time + course.end_time_ampm}`;
+          tmpCards.push({
+            header: `${course.course_category} ${course.course_id}`,
+            instructor: `${course.instructor}`,
+            section: `${course.course_section}`,
+            title: `${course.title}`,
+            credits: `${course.credits}`,
+            extra_info: `${course.info}`,
+            time: time,
+            crn: `${course.crn}`,
+            students: `${course.students}`,
+            limit: `${course.limit}`
+          });
+        };
+
+        if (searchState?.mode === "search") {
+          courses.filter(validateBySearch).forEach(addCard);
+        } else if (searchState?.mode === "filter") {
+          courses.filter(validateByFilter).forEach(addCard);
         } else {
-          for (let i = 0; i < courses.length; i++) {
-            tmpCards.push({
-              header: `${courses[i].course_category + " " + courses[i].course_id}`,
-              instructor: `${courses[i].instructor}`,
-              section: `${courses[i].course_section}`,
-              title: `${courses[i].title}`,
-              credits: `${courses[i].credits}`,
-              extra_info: `${courses[i].info}`,
-              time: `${courses[i].start_time} - ${courses[i].end_time + courses[i].end_time_ampm}`,
-              crn: `${courses[i].crn}`,
-              students: `${courses[i].students}`,
-              limit: `${courses[i].limit}`
-            });
-          }
+          courses.forEach(addCard);
         }
-        setCards(tmpCards)
+
+        setCards(tmpCards);
+
       })
       .catch(error => console.error(error));
   }, [searchState]);
