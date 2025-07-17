@@ -67,17 +67,22 @@ function Header({setSearchTerm, filterVisible, setFilterVisible}) {
 
   const validateForm = (event) => {
     event.preventDefault();
-    const events = {
-      "searchForm": () => search(document.forms["searchForm"]["searchBox"].value),
-      "searchBox": () => search(document.forms["searchForm"]["searchBox"].value),
-      "filterForm": () => filter(document.forms["filterForm"])
-    };
-    console.log(event.target.name)
-    try {
-      events[event.target.name]();
-    } catch {
-      console.log("Unknown event targe name: " + event.target.name)
+
+    const onValidate = (event) => {
+      const events = {
+        "searchForm": () => search(document.forms["searchForm"]["searchBox"].value),
+        "searchBox": () => search(document.forms["searchForm"]["searchBox"].value),
+        "filterForm": () => filter(document.forms["filterForm"])
+      };
+      try {
+        events[event.target.name]();
+      } catch {
+        console.log("Unknown event targe name: " + event.target.name)
+      }
     }
+
+    // const debouncedOnValidate = debounce(onValidate, 500)
+    onValidate(event);
   }
 
   useEffect( () => {

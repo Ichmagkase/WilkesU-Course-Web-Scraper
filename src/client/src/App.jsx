@@ -7,7 +7,6 @@ export default function App() {
 
   const [searchState, setSearchTerm] = useState({})
   const [filterVisible, setFilterVisible] = useState(false)
-  console.log("updated state")
 
   return (
     <>
