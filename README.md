@@ -40,5 +40,5 @@ The year is formatted as XXXX and the semesters are abbreviated to there shortna
 
 ## Maintainers
 
-(Nathaniel Martes)[https://github.com/NateMartes]
-(Zackery Drake)[https://github.com/Ichmagkase]
+[Nathaniel Martes](https://github.com/NateMartes)
+[Zackery Drake](https://github.com/Ichmagkase)
