@@ -42,7 +42,6 @@ export default function Card_Grid({searchState, filterVisible}) {
 
         // The following filter options may also be enabled for
         // serverside filtering (via a DB call)
-d
         // deliverymode: "",
         // coursecategory: "",
         // location: "",
@@ -76,12 +75,12 @@ d
               instructor: `${course.instructor}`,
               section: `${course.course_section}`,
               title: `${course.title}`,
-              credits: `${course.credits}`,
+              credits: course.credits,
               extra_info: `${course.info}`,
               time: time,
-              crn: `${course.crn}`,
-              students: `${course.students}`,
-              limit: `${course.limit}`
+              crn: course.crn,
+              students: course.students,
+              limit: course.limit
             });
           };
 

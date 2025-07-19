@@ -10,16 +10,7 @@ function Card({header = "Header", instructor = "Instructor", section = "Section"
   const buttonStyles = {
     backgroundColor: "#002855"
   }
-
-  // const checkStudents = (value) => {
-  //   const card = document.getElementById("card_button");
-  //   if (value == 1) {
-  //       buttonStyles.backgroundColor = "red"
-  //       setMessage("Closed")
-  //   }
-  // };
-  // checkStudents(students / limit)
-
+  
   const isFull = students >= limit;
   const buttonLabel = isFull ? "Closed" : "Add";
   const buttonStyle = {
@@ -41,7 +32,7 @@ function Card({header = "Header", instructor = "Instructor", section = "Section"
           </div>
           <div className="padding"></div>
           <div className="students">
-            <p> {students} / {limit}</p>
+            <p>{students} / {limit}</p>
           </div>
           <button className="card_button" id="card_button" style={buttonStyle}>{buttonLabel}</button>
           </div>
